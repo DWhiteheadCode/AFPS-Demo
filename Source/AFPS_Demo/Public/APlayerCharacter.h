@@ -4,6 +4,8 @@
 #include "GameFramework/Character.h"
 #include "APlayerCharacter.generated.h"
 
+class UCameraComponent;
+
 UCLASS()
 class AFPS_DEMO_API AAPlayerCharacter : public ACharacter
 {
@@ -12,10 +14,12 @@ class AFPS_DEMO_API AAPlayerCharacter : public ACharacter
 public:
 	AAPlayerCharacter();
 
+	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
 protected:
 	virtual void BeginPlay() override;
 
-public:	
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	UPROPERTY(VisibleAnywhere, Category = "Components")
+	TObjectPtr<UCameraComponent> CameraComp;
 
 };
