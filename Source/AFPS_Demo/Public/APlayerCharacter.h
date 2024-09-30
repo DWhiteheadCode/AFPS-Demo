@@ -10,6 +10,7 @@
 class UCameraComponent;
 class UInputMappingContext;
 class UInputAction;
+class UAWeaponContainerComponent;
 
 UCLASS()
 class AFPS_DEMO_API AAPlayerCharacter : public ACharacter
@@ -24,8 +25,12 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+	// COMPONENTS -------------------------------------------------------
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	TObjectPtr<UCameraComponent> CameraComp;
+
+	UPROPERTY(VisibleAnywhere, Category = "Components")
+	TObjectPtr<UAWeaponContainerComponent> WeaponComp;
 
 	// INPUT ------------------------------------------------------------
 	// IMC
