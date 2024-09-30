@@ -32,11 +32,18 @@ bool UAWeaponContainerComponent::InstantiateWeapon(TSubclassOf<AAWeaponBase> Wea
 		return false;
 	}
 
+	FTransform SpawnTransform = FTransform(OwningCharacter->GetControlRotation(), OwningCharacter->GetActorLocation());
+
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-	AAWeaponBase* NewWeapon = 	
-		OwningCharacter->GetWorld()->SpawnActor<AAWeaponBase>(WeaponClass, OwningCharacter->GetActorTransform(), SpawnParams);
+	AAWeaponBase* NewWeapon = GetWorld()->SpawnActor<AAWeaponBase>(WeaponClass, SpawnTransform, SpawnParams);
+
+	if (!NewWeapon)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Tried to spawn NewWeapon, but it was null"));
+		return false;
+	}
 
 	// Check that NewWeapon's identifier is unique for this component
 	for (AAWeaponBase* Weapon : Weapons)
@@ -48,6 +55,7 @@ bool UAWeaponContainerComponent::InstantiateWeapon(TSubclassOf<AAWeaponBase> Wea
 		}
 	}
 
+	UE_LOG(LogTemp, Log, TEXT("Instantiated Weapon"));
 	Weapons.Add(NewWeapon);
 	return true;
 }
