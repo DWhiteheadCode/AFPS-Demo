@@ -34,7 +34,7 @@ protected:
 	TObjectPtr<UStaticMeshComponent> MeshComp;
 
 	// PROPERTIES -----------------------
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category="Weapon")
 	FGameplayTag Identifier;
 
 	UPROPERTY()
