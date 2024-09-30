@@ -8,6 +8,9 @@ AAWeaponBase::AAWeaponBase()
 {
 	MeshComp = CreateDefaultSubobject<UStaticMeshComponent>("MeshComp");
 	MeshComp->SetupAttachment(RootComponent);
+	MeshComp->SetVisibility(false, true);
+
+	RootComponent = MeshComp;
 }
 
 bool AAWeaponBase::EquipWeapon(AAPlayerCharacter* InOwner)
@@ -23,7 +26,7 @@ bool AAWeaponBase::EquipWeapon(AAPlayerCharacter* InOwner)
 
 	// TODO Attach firing bind
 
-	// TODO Update model/ visibility
+	MeshComp->SetVisibility(true, true);
 
 	return true;
 }
