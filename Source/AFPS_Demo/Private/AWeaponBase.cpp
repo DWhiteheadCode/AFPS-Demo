@@ -3,42 +3,44 @@
 #include "Components/StaticMeshComponent.h"
 
 #include "APlayerCharacter.h"
+#include "Components/SkeletalMeshComponent.h"
 
 AAWeaponBase::AAWeaponBase()
 {
 	MeshComp = CreateDefaultSubobject<UStaticMeshComponent>("MeshComp");
-	MeshComp->SetupAttachment(RootComponent);
 	MeshComp->SetVisibility(false, true);
 
 	RootComponent = MeshComp;
 }
 
-bool AAWeaponBase::EquipWeapon(AAPlayerCharacter* InOwner)
+bool AAWeaponBase::SetOwningPlayer(AAPlayerCharacter* InOwner)
 {
 	if (!InOwner)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Tried to EquipWeapon(), but OwningPlayer was null"));
+		UE_LOG(LogTemp, Warning, TEXT("Can't set weapon owner to null"));
 		return false;
 	}
 
 	OwningPlayer = InOwner;
-	AttachToComponent(OwningPlayer->GetRootComponent(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
-
-	// TODO Attach firing bind
-
-	MeshComp->SetVisibility(true, true);
+	AttachToComponent(OwningPlayer->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 
 	return true;
 }
 
+void AAWeaponBase::EquipWeapon()
+{
+	MeshComp->SetVisibility(true, true);
+		
+	// TODO Attach firing bind
+}
+
+
+
 bool AAWeaponBase::UnequipWeapon()
 {
-
+	MeshComp->SetVisibility(false, true);
 
 	// TODO Detach firing bind
-
-	// TODO Update model/ visibility
-	
 
 	return true;
 }

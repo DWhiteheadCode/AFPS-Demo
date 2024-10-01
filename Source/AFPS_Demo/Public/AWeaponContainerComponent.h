@@ -18,6 +18,10 @@ class AFPS_DEMO_API UAWeaponContainerComponent : public UActorComponent
 public:	
 	UAWeaponContainerComponent();
 
+	void EquipWeapon(FGameplayTag InIdentifier);
+
+	void EquipDefaultWeapon();
+
 protected:
 	virtual void BeginPlay() override;
 

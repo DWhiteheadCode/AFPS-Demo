@@ -20,7 +20,10 @@ public:
 	AAWeaponBase();
 
 	UFUNCTION()
-	bool EquipWeapon(AAPlayerCharacter* InOwner);
+	bool SetOwningPlayer(AAPlayerCharacter* InOwner);
+
+	UFUNCTION()
+	void EquipWeapon();	
 
 	UFUNCTION()
 	bool UnequipWeapon();

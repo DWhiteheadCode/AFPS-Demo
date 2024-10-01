@@ -5,23 +5,21 @@
 
 UAWeaponContainerComponent::UAWeaponContainerComponent()
 {
-	OwningCharacter = Cast<AAPlayerCharacter>(GetOwner());
+	
 }
 
 void UAWeaponContainerComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
+	OwningCharacter = Cast<AAPlayerCharacter>(GetOwner());
+
 	for (TSubclassOf<AAWeaponBase> WeaponClass : DefaultWeapons)
 	{
 		InstantiateWeapon(WeaponClass);
 	}	
 
-	// Equip the first weapon by default
-	if (Weapons.Num() >= 1)
-	{
-		Weapons[0]->EquipWeapon(OwningCharacter);
-	}
+	EquipDefaultWeapon();
 }
 
 bool UAWeaponContainerComponent::InstantiateWeapon(TSubclassOf<AAWeaponBase> WeaponClass)
@@ -35,6 +33,7 @@ bool UAWeaponContainerComponent::InstantiateWeapon(TSubclassOf<AAWeaponBase> Wea
 	FTransform SpawnTransform = FTransform(OwningCharacter->GetControlRotation(), OwningCharacter->GetActorLocation());
 
 	FActorSpawnParameters SpawnParams;
+	SpawnParams.Owner = OwningCharacter;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
 	AAWeaponBase* NewWeapon = GetWorld()->SpawnActor<AAWeaponBase>(WeaponClass, SpawnTransform, SpawnParams);
@@ -46,6 +45,7 @@ bool UAWeaponContainerComponent::InstantiateWeapon(TSubclassOf<AAWeaponBase> Wea
 	}
 
 	// Check that NewWeapon's identifier is unique for this component
+	// TODO Lok for a better way to do this (currently O(n), same as other operations on Weapons array)
 	for (AAWeaponBase* Weapon : Weapons)
 	{
 		if (Weapon && Weapon->GetIdentifier() == NewWeapon->GetIdentifier())
@@ -55,9 +55,33 @@ bool UAWeaponContainerComponent::InstantiateWeapon(TSubclassOf<AAWeaponBase> Wea
 		}
 	}
 
-	UE_LOG(LogTemp, Log, TEXT("Instantiated Weapon"));
+	NewWeapon->SetOwningPlayer(OwningCharacter);
 	Weapons.Add(NewWeapon);
 	return true;
+}
+
+// TODO This is O(n). Could possibly use a Map, though they don't replicate
+// Given n is 9 at most, might be ok to leave as is- need to test performance.
+void UAWeaponContainerComponent::EquipWeapon(FGameplayTag InIdentifier)
+{
+	for (AAWeaponBase* Weapon : Weapons)
+	{
+		if (Weapon && Weapon->GetIdentifier() == InIdentifier)
+		{
+			Weapon->EquipWeapon();
+		}
+	}
+}
+
+void UAWeaponContainerComponent::EquipDefaultWeapon()
+{
+	if (Weapons.IsEmpty())
+	{
+		return;
+	}
+
+	AAWeaponBase* DefaultWeapon = Weapons[0];
+	EquipWeapon(DefaultWeapon->GetIdentifier());
 }
 
 
