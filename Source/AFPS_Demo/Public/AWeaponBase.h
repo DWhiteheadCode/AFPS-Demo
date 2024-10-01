@@ -26,7 +26,7 @@ public:
 	void EquipWeapon();	
 
 	UFUNCTION()
-	bool UnequipWeapon();
+	void UnequipWeapon();
 
 	UFUNCTION()
 	FGameplayTag GetIdentifier() const;

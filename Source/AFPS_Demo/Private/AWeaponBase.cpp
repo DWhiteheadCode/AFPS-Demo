@@ -35,15 +35,12 @@ void AAWeaponBase::EquipWeapon()
 	// TODO Attach firing bind
 }
 
-
-
-bool AAWeaponBase::UnequipWeapon()
+void AAWeaponBase::UnequipWeapon()
 {
 	MeshComp->SetVisibility(false, true);
 
 	// TODO Detach firing bind
 
-	return true;
 }
 
 FGameplayTag AAWeaponBase::GetIdentifier() const
