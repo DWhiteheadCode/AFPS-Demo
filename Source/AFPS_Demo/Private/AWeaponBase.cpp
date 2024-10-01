@@ -9,6 +9,7 @@ AAWeaponBase::AAWeaponBase()
 {
 	MeshComp = CreateDefaultSubobject<UStaticMeshComponent>("MeshComp");
 	MeshComp->SetVisibility(false, true);
+	MeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	RootComponent = MeshComp;
 }
