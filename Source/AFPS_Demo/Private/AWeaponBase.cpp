@@ -89,13 +89,15 @@ void AAWeaponBase::StopFire_Implementation()
 
 bool AAWeaponBase::Fire_Implementation()
 {
+	// Setting this, even if there's no Ammo, means it can't attempt to fire again too soon
+	LastFireTime = GetWorld()->GetTimeSeconds(); 
+
 	if (Ammo <= 0)
 	{
 		UE_LOG(LogTemp, Log, TEXT("Can't fire - out of ammo"));
 		return false;
 	}
-
-	LastFireTime = GetWorld()->GetTimeSeconds();
+	
 	Ammo--;
 	UE_LOG(LogTemp, Log, TEXT("Fired [%s] - Remaining Ammo: [%d]"), *GetNameSafe(this), Ammo);
 
