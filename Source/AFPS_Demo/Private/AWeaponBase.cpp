@@ -23,7 +23,7 @@ bool AAWeaponBase::SetOwningPlayer(AAPlayerCharacter* InOwner)
 	}
 
 	OwningPlayer = InOwner;
-	AttachToComponent(OwningPlayer->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+	AttachToComponent(OwningPlayer->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("hand_r"));
 
 	return true;
 }
