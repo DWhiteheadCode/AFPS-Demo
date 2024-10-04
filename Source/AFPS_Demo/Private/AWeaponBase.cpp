@@ -52,13 +52,13 @@ void AAWeaponBase::UnequipWeapon()
 
 void AAWeaponBase::StartFire_Implementation()
 {
-	UE_LOG(LogTemp, Log, TEXT("Firing base weapon"));
+	//UE_LOG(LogTemp, Log, TEXT("Firing base weapon"));
 	Fire();
 }
 
 void AAWeaponBase::StopFire_Implementation()
 {
-	UE_LOG(LogTemp, Log, TEXT("Stopping firing base weapon"));
+	//UE_LOG(LogTemp, Log, TEXT("Stopping firing base weapon"));
 }
 
 bool AAWeaponBase::Fire_Implementation()
