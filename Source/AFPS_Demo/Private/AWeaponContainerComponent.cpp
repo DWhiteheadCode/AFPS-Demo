@@ -31,7 +31,8 @@ void UAWeaponContainerComponent::BeginPlay()
 			if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerController->InputComponent))
 			{
 				// Fire
-				EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Triggered, this, &UAWeaponContainerComponent::OnFire);
+				EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Started, this, &UAWeaponContainerComponent::OnFireStart);
+				EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Completed, this, &UAWeaponContainerComponent::OnFireStop);
 
 				// Weapon Switching
 				EnhancedInputComponent->BindAction(EquipRocketAction, ETriggerEvent::Triggered, this, &UAWeaponContainerComponent::OnEquipWeaponInput);
@@ -114,11 +115,19 @@ void UAWeaponContainerComponent::OnEquipWeaponInput(const FInputActionInstance& 
 	}
 }
 
-void UAWeaponContainerComponent::OnFire()
+void UAWeaponContainerComponent::OnFireStart()
 {
-	if(EquippedWeapon)
+	if (EquippedWeapon)
 	{
-		EquippedWeapon->Fire();
+		EquippedWeapon->StartFire();
+	}
+}
+
+void UAWeaponContainerComponent::OnFireStop()
+{
+	if (EquippedWeapon)
+	{
+		EquippedWeapon->StopFire();
 	}
 }
 

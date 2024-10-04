@@ -53,7 +53,10 @@ protected:
 	TObjectPtr<UInputAction> FireAction;
 
 	UFUNCTION()
-	void OnFire();
+	void OnFireStart();
+
+	UFUNCTION()
+	void OnFireStop();
 
 	// ALL WEAPON SWAP INPUTS ---------------
 	// Generic EquipWeaponInput 

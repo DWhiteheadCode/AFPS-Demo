@@ -31,21 +31,21 @@ bool AAWeaponBase::SetOwningPlayer(AAPlayerCharacter* InOwner)
 void AAWeaponBase::EquipWeapon()
 {
 	MeshComp->SetVisibility(true, true);
-		
-	// TODO Attach firing bind
 }
 
 void AAWeaponBase::UnequipWeapon()
 {
 	MeshComp->SetVisibility(false, true);
-
-	// TODO Detach firing bind
-
 }
 
-void AAWeaponBase::Fire_Implementation()
+void AAWeaponBase::StartFire_Implementation()
 {
 	UE_LOG(LogTemp, Log, TEXT("Firing base weapon"));
+}
+
+void AAWeaponBase::StopFire_Implementation()
+{
+	UE_LOG(LogTemp, Log, TEXT("Stopping firing base weapon"));
 }
 
 FGameplayTag AAWeaponBase::GetIdentifier() const
