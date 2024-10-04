@@ -1,5 +1,8 @@
 #include "AWeaponContainerComponent.h"
 
+#include "EnhancedInputSubsystems.h"
+#include "EnhancedInputComponent.h"
+
 #include "AWeaponBase.h"
 #include "APlayerCharacter.h"
 
@@ -13,6 +16,34 @@ void UAWeaponContainerComponent::BeginPlay()
 	Super::BeginPlay();
 
 	OwningCharacter = Cast<AAPlayerCharacter>(GetOwner());
+
+	// Set up weapon switch bindings
+	if (OwningCharacter)
+	{
+		if (APlayerController* const PlayerController = Cast<APlayerController>(OwningCharacter->GetController()))
+		{
+			if (UEnhancedInputLocalPlayerSubsystem* const Subsystem
+				= ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
+			{
+				Subsystem->AddMappingContext(WeaponInputMappingContext, 0);
+			}
+
+			if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerController->InputComponent))
+			{
+				// Fire
+				EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Triggered, this, &UAWeaponContainerComponent::OnFire);
+
+				// Weapon Switching
+				EnhancedInputComponent->BindAction(EquipRocketAction, ETriggerEvent::Triggered, this, &UAWeaponContainerComponent::OnEquipWeaponInput);
+				EnhancedInputComponent->BindAction(EquipLGAction, ETriggerEvent::Triggered, this, &UAWeaponContainerComponent::OnEquipWeaponInput);
+				EnhancedInputComponent->BindAction(EquipRailAction, ETriggerEvent::Triggered, this, &UAWeaponContainerComponent::OnEquipWeaponInput);
+			}
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Initialised WeaponContainerComponent, but OwningCharacter was null"));
+	}
 
 	for (TSubclassOf<AAWeaponBase> WeaponClass : DefaultWeapons)
 	{
@@ -60,6 +91,37 @@ bool UAWeaponContainerComponent::InstantiateWeapon(TSubclassOf<AAWeaponBase> Wea
 	return true;
 }
 
+void UAWeaponContainerComponent::OnEquipWeaponInput(const FInputActionInstance& Input)
+{
+	if (Input.GetSourceAction() == EquipRocketAction)
+	{
+		UE_LOG(LogTemp, Log, TEXT("Equipping Rocket"));
+		EquipWeapon(RocketGameplayTag);
+	}
+	else if (Input.GetSourceAction() == EquipLGAction)
+	{
+		UE_LOG(LogTemp, Log, TEXT("Equipping LG"));
+		EquipWeapon(LGGameplayTag);
+	}
+	else if (Input.GetSourceAction() == EquipRailAction)
+	{
+		UE_LOG(LogTemp, Log, TEXT("Equipping Rail"));
+		EquipWeapon(RailGameplayTag);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("OnEquipWeaponInput couldn't handle input type."));
+	}
+}
+
+void UAWeaponContainerComponent::OnFire()
+{
+	if(EquippedWeapon)
+	{
+		EquippedWeapon->Fire();
+	}
+}
+
 // TODO This is O(n). Could possibly use a Map, though they don't replicate
 // Given n is 9 at most, might be ok to leave as is- need to test performance.
 void UAWeaponContainerComponent::EquipWeapon(FGameplayTag InIdentifier)
@@ -69,6 +131,7 @@ void UAWeaponContainerComponent::EquipWeapon(FGameplayTag InIdentifier)
 		if (Weapon && Weapon->GetIdentifier() == InIdentifier)
 		{
 			Weapon->EquipWeapon();
+			EquippedWeapon = Weapon;
 		}
 	}
 }
@@ -83,6 +146,3 @@ void UAWeaponContainerComponent::EquipDefaultWeapon()
 	AAWeaponBase* DefaultWeapon = Weapons[0];
 	EquipWeapon(DefaultWeapon->GetIdentifier());
 }
-
-
-

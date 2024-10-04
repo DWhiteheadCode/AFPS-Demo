@@ -28,6 +28,9 @@ public:
 	UFUNCTION()
 	void UnequipWeapon();
 
+	UFUNCTION(BlueprintNativeEvent)
+	void Fire();
+
 	UFUNCTION()
 	FGameplayTag GetIdentifier() const;
 

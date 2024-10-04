@@ -43,8 +43,12 @@ void AAWeaponBase::UnequipWeapon()
 
 }
 
+void AAWeaponBase::Fire_Implementation()
+{
+	UE_LOG(LogTemp, Log, TEXT("Firing base weapon"));
+}
+
 FGameplayTag AAWeaponBase::GetIdentifier() const
 {
 	return Identifier;
 }
-

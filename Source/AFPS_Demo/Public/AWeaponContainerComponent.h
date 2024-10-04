@@ -4,8 +4,11 @@
 #include "Components/ActorComponent.h"
 
 #include "GameplayTagContainer.h"
+#include "InputAction.h"
 
 #include "AWeaponContainerComponent.generated.h"
+
+class UInputMappingContext;
 
 class AAWeaponBase;
 class AAPlayerCharacter;
@@ -39,4 +42,42 @@ protected:
 
 	UFUNCTION()
 	bool InstantiateWeapon(TSubclassOf<AAWeaponBase> WeaponClass);
+
+	// INPUT ----------------------------------------------------
+	// IMC
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	TObjectPtr<UInputMappingContext> WeaponInputMappingContext;
+
+	// Fire Action
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	TObjectPtr<UInputAction> FireAction;
+
+	UFUNCTION()
+	void OnFire();
+
+	// ALL WEAPON SWAP INPUTS ---------------
+	// Generic EquipWeaponInput 
+	UFUNCTION()
+	void OnEquipWeaponInput(const FInputActionInstance& Input);
+
+	// Rocket
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	TObjectPtr<UInputAction> EquipRocketAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	FGameplayTag RocketGameplayTag;
+
+	// LG
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	TObjectPtr<UInputAction> EquipLGAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	FGameplayTag LGGameplayTag;
+
+	// Rail
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	TObjectPtr<UInputAction> EquipRailAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	FGameplayTag RailGameplayTag;
 };
