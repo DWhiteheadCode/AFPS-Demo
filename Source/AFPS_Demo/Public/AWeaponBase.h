@@ -19,6 +19,8 @@ class AFPS_DEMO_API AAWeaponBase : public AActor
 public:	
 	AAWeaponBase();
 
+	void BeginPlay() override;
+
 	UFUNCTION()
 	bool SetOwningPlayer(AAPlayerCharacter* InOwner);
 
@@ -33,6 +35,9 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent)
 	void StopFire();
+
+	UFUNCTION(BlueprintNativeEvent)
+	bool Fire();
 
 	UFUNCTION()
 	FGameplayTag GetIdentifier() const;
@@ -49,6 +54,13 @@ protected:
 	UPROPERTY()
 	TObjectPtr<AAPlayerCharacter> OwningPlayer;
 
+	UPROPERTY(EditAnywhere, Category = "Ammo")
+	int MaxAmmo = 15;
 
+	UPROPERTY(EditAnywhere, Category = "Ammo")
+	int StartingAmmo = 10;
+
+	UPROPERTY()
+	int Ammo;
 
 };

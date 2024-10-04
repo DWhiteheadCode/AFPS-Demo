@@ -14,6 +14,18 @@ AAWeaponBase::AAWeaponBase()
 	RootComponent = MeshComp;
 }
 
+void AAWeaponBase::BeginPlay()
+{
+	Super::BeginPlay();
+
+	if (StartingAmmo > MaxAmmo)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Weapon [%s] has more StartingAmmo [%d] than MaxAmmo [%d]"), *GetNameSafe(this), StartingAmmo, MaxAmmo);
+	}
+
+	Ammo = StartingAmmo;
+}
+
 bool AAWeaponBase::SetOwningPlayer(AAPlayerCharacter* InOwner)
 {
 	if (!InOwner)
@@ -41,11 +53,26 @@ void AAWeaponBase::UnequipWeapon()
 void AAWeaponBase::StartFire_Implementation()
 {
 	UE_LOG(LogTemp, Log, TEXT("Firing base weapon"));
+	Fire();
 }
 
 void AAWeaponBase::StopFire_Implementation()
 {
 	UE_LOG(LogTemp, Log, TEXT("Stopping firing base weapon"));
+}
+
+bool AAWeaponBase::Fire_Implementation()
+{
+	if (Ammo <= 0)
+	{
+		UE_LOG(LogTemp, Log, TEXT("Can't fire - out of ammo"));
+		return false;
+	}
+
+	Ammo--;
+	UE_LOG(LogTemp, Log, TEXT("Fired [%s] - Remaining Ammo: [%d]"), *GetNameSafe(this), Ammo);
+	
+	return true;
 }
 
 FGameplayTag AAWeaponBase::GetIdentifier() const
