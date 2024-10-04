@@ -63,4 +63,11 @@ protected:
 	UPROPERTY()
 	int Ammo;
 
+	UPROPERTY(EditAnywhere, Category = "Weapon")
+	float FireDelay = 1.f;
+
+	FTimerHandle TimerHandle_FireDelay;
+
+	UPROPERTY()
+	float LastFireTime = -1.f;
 };

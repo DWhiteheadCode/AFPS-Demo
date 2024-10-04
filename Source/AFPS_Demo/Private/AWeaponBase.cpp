@@ -52,13 +52,39 @@ void AAWeaponBase::UnequipWeapon()
 
 void AAWeaponBase::StartFire_Implementation()
 {
-	//UE_LOG(LogTemp, Log, TEXT("Firing base weapon"));
-	Fire();
+	if (GetWorldTimerManager().IsTimerActive(TimerHandle_FireDelay))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Tried to start weapon firing while already firing"));
+		return;
+	}
+
+	float InitialDelay = 0.f;
+
+	if (LastFireTime >= 0) // Weapon has been fired before
+	{
+		const float CurrentTime = GetWorld()->GetTimeSeconds();
+		const float TimeSinceLastShot = CurrentTime - LastFireTime;
+		
+		if (TimeSinceLastShot < FireDelay) // Weapon is still "reloading" (between bullets)
+		{
+			InitialDelay = FireDelay - TimeSinceLastShot;
+		}
+	}
+
+	FTimerDelegate Delegate;
+	Delegate.BindUFunction(this, "Fire");
+	GetWorldTimerManager().SetTimer(TimerHandle_FireDelay, Delegate, FireDelay, true, InitialDelay);
 }
 
 void AAWeaponBase::StopFire_Implementation()
 {
-	//UE_LOG(LogTemp, Log, TEXT("Stopping firing base weapon"));
+	if (!GetWorldTimerManager().IsTimerActive(TimerHandle_FireDelay))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Tried to stop weapon firing while not already firing"));
+		return;
+	}
+
+	GetWorldTimerManager().ClearTimer(TimerHandle_FireDelay);
 }
 
 bool AAWeaponBase::Fire_Implementation()
@@ -69,9 +95,10 @@ bool AAWeaponBase::Fire_Implementation()
 		return false;
 	}
 
+	LastFireTime = GetWorld()->GetTimeSeconds();
 	Ammo--;
 	UE_LOG(LogTemp, Log, TEXT("Fired [%s] - Remaining Ammo: [%d]"), *GetNameSafe(this), Ammo);
-	
+
 	return true;
 }
 
