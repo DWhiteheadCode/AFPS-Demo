@@ -4,11 +4,15 @@
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
 
+#include "AHealthComponent.h"
+
 AAPlayerCharacter::AAPlayerCharacter()
 {
 	CameraComp = CreateDefaultSubobject<UCameraComponent>("CameraComp");
 	CameraComp->SetupAttachment(RootComponent);
 	CameraComp->bUsePawnControlRotation = true;
+
+	HealthComp = CreateDefaultSubobject<UAHealthComponent>("HealthComp");
 }
 
 void AAPlayerCharacter::BeginPlay()
