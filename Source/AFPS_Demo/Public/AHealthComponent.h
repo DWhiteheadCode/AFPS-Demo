@@ -25,13 +25,13 @@ class AFPS_DEMO_API UAHealthComponent : public UActorComponent
 public:	
 	UAHealthComponent();
 
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable)
 	bool ApplyDamage(const int Amount, AActor* InstigatorActor);
 
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable)
 	bool AddHealth(const int Amount, const bool bCanOverHeal, AActor* InstigatorActor);
 
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable)
 	bool AddArmour(const int Amount, const bool bCanOverHeal, AActor* InstigatorActor);
 
 	UPROPERTY(BlueprintAssignable)
