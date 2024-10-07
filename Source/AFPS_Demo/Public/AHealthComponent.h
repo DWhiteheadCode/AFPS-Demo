@@ -38,15 +38,10 @@ public:
 	FOnHealthChanged OnHealthChanged;
 
 protected:
+	// HEALTH -------------------------
 	UPROPERTY()
 	int Health = 125;
 
-	UPROPERTY()
-	int Armour = 50;
-
-	UPROPERTY(EditAnywhere, Category = "Health")
-	float ArmourEfficiency = 0.67f; // Ratio of damage dealt that is applied to armour
-	
 	UPROPERTY(EditAnywhere, Category = "Health")
 	int BaseHealthMax = 100;
 
@@ -54,9 +49,39 @@ protected:
 	int OverHealthMax = 125; // Max health, including base-health and overhealth
 
 	UPROPERTY(EditAnywhere, Category = "Health")
+	float OverHealthDecayInterval = 1.f; // Time (seconds) between over-health decay ticks. 
+
+	UPROPERTY(EditAnywhere, Category = "Health")
+	int OverHealthDecayAmount = 2; // Amount of health to decay every OverHealthDecayTime seconds
+
+	UFUNCTION()
+	void DecayOverHealth();
+
+	FTimerHandle TimerHandle_OverHealthDecay;
+
+
+	// ARMOUR -------------------------
+	UPROPERTY()
+	int Armour = 50;
+
+	UPROPERTY(EditAnywhere, Category = "Health")
+	float ArmourEfficiency = 0.67f; // Ratio of damage dealt that is applied to armour
+
+	UPROPERTY(EditAnywhere, Category = "Health")
 	int BaseArmourMax = 75;
 
 	UPROPERTY(EditAnywhere, Category = "Health")
 	int OverArmourMax = 100; // Max armour, including base-armour and overarmour
+
+	UPROPERTY(EditAnywhere, Category = "Health")
+	float OverArmourDecayInterval = 1.f; // Time (seconds) between over-Armour decay ticks. 
+
+	UPROPERTY(EditAnywhere, Category = "Health")
+	int OverArmourDecayAmount = 2; // Amount of Armour to decay every OverArmourDecayTime seconds
+
+	UFUNCTION()
+	void DecayOverArmour();
+
+	FTimerHandle TimerHandle_OverArmourDecay;
 		
 };

@@ -60,6 +60,12 @@ bool UAHealthComponent::AddHealth(const int Amount, const bool bCanOverHeal, AAc
 
 	OnHealthChanged.Broadcast(this, InstigatorActor, Health, ActualHealthDelta, Armour, 0);
 
+	// This healed overhealth, so set/reset decay timer
+	if (bCanOverHeal && Health > BaseHealthMax)
+	{
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle_OverHealthDecay, this, &UAHealthComponent::DecayOverHealth, OverHealthDecayInterval);
+	}
+
     return true;
 }
 
@@ -86,7 +92,81 @@ bool UAHealthComponent::AddArmour(const int Amount, const bool bCanOverHeal, AAc
 
 	OnHealthChanged.Broadcast(this, InstigatorActor, Health, 0, Armour, ActualArmourDelta);
 
+	// This healed overarmour, so set/reset decay timer
+	if (bCanOverHeal && Armour > BaseArmourMax)
+	{
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle_OverArmourDecay, this, &UAHealthComponent::DecayOverArmour, OverArmourDecayInterval);
+	}
+
 	return true;
+}
+
+void UAHealthComponent::DecayOverHealth()
+{
+	if (OverHealthDecayAmount <= 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("OverHealthDecayAmount is non-positive [%d]. Ignoring decay."), OverHealthDecayAmount);
+		return;
+	}
+
+	if (Health <= BaseHealthMax)
+	{
+		UE_LOG(LogTemp, Log, TEXT("No need to decay OverHealth as user has no OverHealth"));
+		return;
+	}
+
+	const int AmountToDecay = FMath::Min( Health - BaseHealthMax, OverHealthDecayAmount );
+	const int OldHealth = Health;
+
+	Health -= AmountToDecay;
+	
+	OnHealthChanged.Broadcast(this, GetOwner(), Health, Health - OldHealth, Armour, 0);
+
+	if (OverHealthDecayInterval <= 0.f)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("OverHealthDecayInterval is non-positive [%f]. Not setting decay timer."), OverHealthDecayInterval);
+		return;
+	}
+
+	// More health needs to be decayed
+	if (Health > BaseHealthMax)
+	{
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle_OverHealthDecay, this, &UAHealthComponent::DecayOverHealth, OverHealthDecayInterval);
+	}
+}
+
+void UAHealthComponent::DecayOverArmour()
+{
+	if (OverArmourDecayAmount <= 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("OverArmourDecayAmount is non-positive [%d]. Ignoring decay."), OverArmourDecayAmount);
+		return;
+	}
+
+	if (Armour <= BaseArmourMax)
+	{
+		UE_LOG(LogTemp, Log, TEXT("No need to decay OverArmour as user has no OverArmour"));
+		return;
+	}
+
+	const int AmountToDecay = FMath::Min(Armour - BaseArmourMax, OverArmourDecayAmount);
+	const int OldArmour = Armour;
+
+	Armour -= AmountToDecay;
+
+	OnHealthChanged.Broadcast(this, GetOwner(), Health, 0, Armour, Armour - OldArmour);
+
+	if (OverArmourDecayInterval <= 0.f)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("OverArmourDecayInterval is non-positive [%f]. Not setting decay timer."), OverArmourDecayInterval);
+		return;
+	}
+
+	// More armour needs to be decayed
+	if (Armour > BaseArmourMax)
+	{
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle_OverArmourDecay, this, &UAHealthComponent::DecayOverArmour, OverArmourDecayInterval);
+	}
 }
 
 
