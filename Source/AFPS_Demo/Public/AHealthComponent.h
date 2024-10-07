@@ -37,6 +37,13 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnHealthChanged OnHealthChanged;
 
+	UFUNCTION(BlueprintCallable)
+	int GetHealth() const;
+
+	UFUNCTION(BlueprintCallable)
+	int GetArmour() const;
+
+
 protected:
 	// HEALTH -------------------------
 	UPROPERTY()

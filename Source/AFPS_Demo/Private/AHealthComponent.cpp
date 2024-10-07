@@ -101,6 +101,16 @@ bool UAHealthComponent::AddArmour(const int Amount, const bool bCanOverHeal, AAc
 	return true;
 }
 
+int UAHealthComponent::GetHealth() const
+{
+	return Health;
+}
+
+int UAHealthComponent::GetArmour() const
+{
+	return Armour;
+}
+
 void UAHealthComponent::DecayOverHealth()
 {
 	if (OverHealthDecayAmount <= 0)
