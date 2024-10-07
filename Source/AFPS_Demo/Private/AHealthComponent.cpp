@@ -6,12 +6,30 @@ UAHealthComponent::UAHealthComponent()
 
 }
 
+void UAHealthComponent::BeginPlay()
+{
+	Health = StartingHealth;
+	Armour = StartingArmour;
+}
+
 bool UAHealthComponent::ApplyDamage(const int Amount, AActor* InstigatorActor)
 {
 	if (Amount < 0)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Tried to apply negative [%d] damage"), Amount);
 		return false;
+	}
+
+	if (BaseHealthMax > OverHealthMax)
+	{
+		UE_LOG(LogTemp, Error, TEXT("BaseHealthMax [%d] can't exceed OverHealthMax [%d]."), BaseHealthMax, OverHealthMax);
+		return;
+	}
+
+	if (BaseArmourMax > OverArmourMax)
+	{
+		UE_LOG(LogTemp, Error, TEXT("BaseArmourMax [%d] can't exceed OverArmourMax [%d]."), BaseArmourMax, OverArmourMax);
+		return;
 	}
 
 	// Do as much damage to Armour as possible, then apply remaining damage to Health
@@ -110,6 +128,8 @@ int UAHealthComponent::GetArmour() const
 {
 	return Armour;
 }
+
+
 
 void UAHealthComponent::DecayOverHealth()
 {

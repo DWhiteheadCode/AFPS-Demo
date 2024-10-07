@@ -25,6 +25,8 @@ class AFPS_DEMO_API UAHealthComponent : public UActorComponent
 public:	
 	UAHealthComponent();
 
+	void BeginPlay() override;
+
 	UFUNCTION(BlueprintCallable)
 	bool ApplyDamage(const int Amount, AActor* InstigatorActor);
 
@@ -50,6 +52,9 @@ protected:
 	int Health = 125;
 
 	UPROPERTY(EditAnywhere, Category = "Health")
+	int StartingHealth = 125;
+
+	UPROPERTY(EditAnywhere, Category = "Health")
 	int BaseHealthMax = 100;
 
 	UPROPERTY(EditAnywhere, Category = "Health")
@@ -70,6 +75,9 @@ protected:
 	// ARMOUR -------------------------
 	UPROPERTY()
 	int Armour = 50;
+
+	UPROPERTY(EditAnywhere, Category = "Health")
+	int StartingArmour = 50;
 
 	UPROPERTY(EditAnywhere, Category = "Health")
 	float ArmourEfficiency = 0.67f; // Ratio of damage dealt that is applied to armour
