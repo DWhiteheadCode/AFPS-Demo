@@ -10,6 +10,30 @@ void UAHealthComponent::BeginPlay()
 {
 	Health = StartingHealth;
 	Armour = StartingArmour;
+
+	if (BaseHealthMax > OverHealthMax)
+	{
+		UE_LOG(LogTemp, Error, TEXT("BaseHealthMax must be <= OverHealthMax."));
+		return;
+	}
+
+	if (BaseArmourMax > OverArmourMax)
+	{
+		UE_LOG(LogTemp, Error, TEXT("BaseArmourMax must be <= OverArmourMax."));
+		return;
+	}
+
+	// Started with overhealth, so start decay timer
+	if (Health > BaseHealthMax)
+	{
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle_OverHealthDecay, this, &UAHealthComponent::DecayOverHealth, OverHealthDecayInterval);
+	}
+
+	// Started with overarmour, so start decay timer
+	if (Armour > BaseArmourMax)
+	{
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle_OverArmourDecay, this, &UAHealthComponent::DecayOverArmour, OverArmourDecayInterval);
+	}
 }
 
 bool UAHealthComponent::ApplyDamage(const int Amount, AActor* InstigatorActor)
