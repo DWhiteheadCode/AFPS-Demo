@@ -47,13 +47,13 @@ bool UAHealthComponent::ApplyDamage(const int Amount, AActor* InstigatorActor)
 	if (BaseHealthMax > OverHealthMax)
 	{
 		UE_LOG(LogTemp, Error, TEXT("BaseHealthMax [%d] can't exceed OverHealthMax [%d]."), BaseHealthMax, OverHealthMax);
-		return;
+		return false;
 	}
 
 	if (BaseArmourMax > OverArmourMax)
 	{
 		UE_LOG(LogTemp, Error, TEXT("BaseArmourMax [%d] can't exceed OverArmourMax [%d]."), BaseArmourMax, OverArmourMax);
-		return;
+		return false;
 	}
 
 	// Do as much damage to Armour as possible, then apply remaining damage to Health
@@ -76,7 +76,7 @@ bool UAHealthComponent::ApplyDamage(const int Amount, AActor* InstigatorActor)
 		// TODO Death logic via GameMode
 	}
 
-	return ActualHealthDelta != 0 || ActualArmourDelta != 0;
+	return true;
 }
 
 bool UAHealthComponent::AddHealth(const int Amount, const bool bCanOverHeal, AActor* InstigatorActor)
