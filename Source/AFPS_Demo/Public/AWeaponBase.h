@@ -40,12 +40,18 @@ public:
 
 	// Called when the weapoon actually fires (i.e. each time a bullet/projectile is shot)
 	UFUNCTION(BlueprintNativeEvent)
-	bool Fire();
+	void Fire();
+
+	UFUNCTION()
+	bool CanFire();
 
 	UFUNCTION()
 	FGameplayTag GetIdentifier() const;
 
 protected:
+	UFUNCTION()
+	void OnFireDelayEnd();
+	
 	// COMPONENTS -----------------------
 	UPROPERTY(EditDefaultsOnly, Category="Components")
 	TObjectPtr<UStaticMeshComponent> MeshComp;

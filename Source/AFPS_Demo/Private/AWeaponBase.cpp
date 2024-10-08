@@ -72,7 +72,7 @@ void AAWeaponBase::StartFire()
 	}
 
 	FTimerDelegate Delegate;
-	Delegate.BindUFunction(this, "Fire");
+	Delegate.BindUFunction(this, "OnFireDelayEnd");
 	GetWorldTimerManager().SetTimer(TimerHandle_FireDelay, Delegate, FireDelay, true, InitialDelay);
 }
 
@@ -87,24 +87,36 @@ void AAWeaponBase::StopFire()
 	GetWorldTimerManager().ClearTimer(TimerHandle_FireDelay);
 }
 
-bool AAWeaponBase::Fire_Implementation()
+void AAWeaponBase::Fire_Implementation()
 {
-	// Setting this, even if there's no Ammo, means it can't attempt to fire again too soon
-	LastFireTime = GetWorld()->GetTimeSeconds(); 
-
-	if (Ammo <= 0)
+	if (!CanFire())
 	{
-		UE_LOG(LogTemp, Log, TEXT("Can't fire - out of ammo"));
-		return false;
+		UE_LOG(LogTemp, Warning, TEXT("Tried to fire weapon [%s], but CanFire() returned false"), *GetNameSafe(this));
+		return;
 	}
 	
 	Ammo--;
+	LastFireTime = GetWorld()->GetTimeSeconds();
 	UE_LOG(LogTemp, Log, TEXT("Fired [%s] - Remaining Ammo: [%d]"), *GetNameSafe(this), Ammo);
+}
 
-	return true;
+bool AAWeaponBase::CanFire()
+{
+	return Ammo > 0;
 }
 
 FGameplayTag AAWeaponBase::GetIdentifier() const
 {
 	return Identifier;
+}
+
+void AAWeaponBase::OnFireDelayEnd()
+{
+	// Setting this (even if the weapon can't' fire) means it can't attempt to fire again too soon
+	LastFireTime = GetWorld()->GetTimeSeconds();
+
+	if (CanFire())
+	{
+		Fire();
+	}
 }
