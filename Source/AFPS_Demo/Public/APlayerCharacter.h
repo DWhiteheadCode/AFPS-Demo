@@ -11,7 +11,7 @@ class UCameraComponent;
 class UInputMappingContext;
 class UInputAction;
 
-class UAHealthComponent;
+class UAStackComponent;
 
 UCLASS()
 class AFPS_DEMO_API AAPlayerCharacter : public ACharacter
@@ -31,7 +31,7 @@ protected:
 	TObjectPtr<UCameraComponent> CameraComp;
 
 	UPROPERTY(VisibleAnywhere, Category = "Components")
-	TObjectPtr<UAHealthComponent> HealthComp;
+	TObjectPtr<UAStackComponent> HealthComp;
 
 	// INPUT ------------------------------------------------------------
 	// IMC

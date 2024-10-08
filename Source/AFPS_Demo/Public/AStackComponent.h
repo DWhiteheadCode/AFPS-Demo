@@ -4,11 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "AHealthComponent.generated.h"
+#include "AStackComponent.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_SixParams(
-	FOnHealthChanged,
-	UAHealthComponent*, OwningComp,
+	FOnStackChanged,
+	UAStackComponent*, OwningComp,
 	AActor*, InstigatorActor,
 	int, NewHealth,
 	int, DeltaHealth,
@@ -18,12 +18,12 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_SixParams(
 
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class AFPS_DEMO_API UAHealthComponent : public UActorComponent
+class AFPS_DEMO_API UAStackComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
 public:	
-	UAHealthComponent();
+	UAStackComponent();
 
 	void BeginPlay() override;
 
@@ -37,7 +37,7 @@ public:
 	bool AddArmour(const int Amount, const bool bCanOverHeal, AActor* InstigatorActor);
 
 	UPROPERTY(BlueprintAssignable)
-	FOnHealthChanged OnHealthChanged;
+	FOnStackChanged OnStackChanged;
 
 	UFUNCTION(BlueprintCallable)
 	int GetHealth() const;

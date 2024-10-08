@@ -2,13 +2,13 @@
 
 #include "CoreMinimal.h"
 #include "ABasePickup.h"
-#include "AHealthPickup.generated.h"
+#include "AStackPickup.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class AFPS_DEMO_API AAHealthPickup : public AABasePickup
+class AFPS_DEMO_API AAStackPickup : public AABasePickup
 {
 	GENERATED_BODY()
 	
