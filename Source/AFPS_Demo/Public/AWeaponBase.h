@@ -30,12 +30,15 @@ public:
 	UFUNCTION()
 	void UnequipWeapon();
 
-	UFUNCTION(BlueprintNativeEvent)
-	void StartFire();
+	// Called when the user starts firing ("holding the trigger down")
+	UFUNCTION()
+	void StartFire(); 
 
-	UFUNCTION(BlueprintNativeEvent)
+	// Called when the user stops firing ("releases the trigger")
+	UFUNCTION()
 	void StopFire();
 
+	// Called when the weapoon actually fires (i.e. each time a bullet/projectile is shot)
 	UFUNCTION(BlueprintNativeEvent)
 	bool Fire();
 

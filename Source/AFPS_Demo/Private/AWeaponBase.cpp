@@ -50,7 +50,7 @@ void AAWeaponBase::UnequipWeapon()
 	MeshComp->SetVisibility(false, true);
 }
 
-void AAWeaponBase::StartFire_Implementation()
+void AAWeaponBase::StartFire()
 {
 	if (GetWorldTimerManager().IsTimerActive(TimerHandle_FireDelay))
 	{
@@ -76,7 +76,7 @@ void AAWeaponBase::StartFire_Implementation()
 	GetWorldTimerManager().SetTimer(TimerHandle_FireDelay, Delegate, FireDelay, true, InitialDelay);
 }
 
-void AAWeaponBase::StopFire_Implementation()
+void AAWeaponBase::StopFire()
 {
 	if (!GetWorldTimerManager().IsTimerActive(TimerHandle_FireDelay))
 	{
