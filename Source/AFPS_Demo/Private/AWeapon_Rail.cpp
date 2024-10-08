@@ -3,6 +3,11 @@
 #include "AStackComponent.h"
 #include "APlayerCharacter.h"
 
+AAWeapon_Rail::AAWeapon_Rail()
+{
+	FireDelay = 1.7f;
+}
+
 void AAWeapon_Rail::Fire_Implementation()
 {
 	if (!CanFire()) // Weapon can't fire (typically out of ammo)

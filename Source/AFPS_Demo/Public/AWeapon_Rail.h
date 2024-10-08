@@ -13,6 +13,8 @@ class AFPS_DEMO_API AAWeapon_Rail : public AAWeaponBase
 	GENERATED_BODY()
 	
 public:
+	AAWeapon_Rail();
+
 	void Fire_Implementation() override;
 
 protected:
