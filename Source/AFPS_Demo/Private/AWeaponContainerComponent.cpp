@@ -96,17 +96,14 @@ void UAWeaponContainerComponent::OnEquipWeaponInput(const FInputActionInstance& 
 {
 	if (Input.GetSourceAction() == EquipRocketAction)
 	{
-		UE_LOG(LogTemp, Log, TEXT("Equipping Rocket"));
 		EquipWeapon(RocketGameplayTag);
 	}
 	else if (Input.GetSourceAction() == EquipLGAction)
 	{
-		UE_LOG(LogTemp, Log, TEXT("Equipping LG"));
 		EquipWeapon(LGGameplayTag);
 	}
 	else if (Input.GetSourceAction() == EquipRailAction)
 	{
-		UE_LOG(LogTemp, Log, TEXT("Equipping Rail"));
 		EquipWeapon(RailGameplayTag);
 	}
 	else
@@ -137,8 +134,15 @@ void UAWeaponContainerComponent::EquipWeapon(FGameplayTag InIdentifier)
 {
 	for (AAWeaponBase* Weapon : Weapons)
 	{
+		if (Weapon == EquippedWeapon)
+		{
+			continue;
+		}
+
 		if (Weapon && Weapon->GetIdentifier() == InIdentifier)
 		{
+			UE_LOG( LogTemp, Log, TEXT("Equipping weapon: [%s]"), *(InIdentifier.GetTagName().ToString()) );
+
 			Weapon->EquipWeapon();
 			EquippedWeapon = Weapon;
 		}
