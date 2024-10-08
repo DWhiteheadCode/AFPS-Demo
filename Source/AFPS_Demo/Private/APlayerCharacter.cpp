@@ -45,6 +45,11 @@ void AAPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	}
 }
 
+FVector AAPlayerCharacter::GetPawnViewLocation() const
+{
+	return CameraComp->GetComponentLocation();
+}
+
 void AAPlayerCharacter::Move(const FInputActionValue& Value)
 {
 	if (GetController())
