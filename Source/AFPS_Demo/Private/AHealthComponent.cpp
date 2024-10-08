@@ -8,6 +8,8 @@ UAHealthComponent::UAHealthComponent()
 
 void UAHealthComponent::BeginPlay()
 {
+	Super::BeginPlay();
+
 	Health = StartingHealth;
 	Armour = StartingArmour;
 
