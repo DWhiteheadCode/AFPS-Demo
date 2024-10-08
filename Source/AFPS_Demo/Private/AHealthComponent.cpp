@@ -91,7 +91,7 @@ bool UAHealthComponent::AddHealth(const int Amount, const bool bCanOverHeal, AAc
 
 	if (!bCanOverHeal && Health >= BaseHealthMax)
 	{
-		UE_LOG(LogTemp, Log, TEXT("Couldn't add health as player already at or above BaseHealthMax"));
+		UE_LOG(LogTemp, Log, TEXT("Couldn't add health as player already at or above BaseHealthMax, and this heal can't overheal"));
 		return false;
 	}
 
@@ -123,7 +123,7 @@ bool UAHealthComponent::AddArmour(const int Amount, const bool bCanOverHeal, AAc
 
 	if (!bCanOverHeal && Armour >= BaseArmourMax)
 	{
-		UE_LOG(LogTemp, Log, TEXT("Couldn't add armour as player already at or above BaseArmourMax"));
+		UE_LOG(LogTemp, Log, TEXT("Couldn't add armour as player already at or above BaseArmourMax, and this heal can't overheal"));
 		return false;
 	}
 
