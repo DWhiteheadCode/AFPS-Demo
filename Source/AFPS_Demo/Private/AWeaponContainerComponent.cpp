@@ -157,5 +157,8 @@ void UAWeaponContainerComponent::EquipDefaultWeapon()
 	}
 
 	AAWeaponBase* DefaultWeapon = Weapons[0];
-	EquipWeapon(DefaultWeapon->GetIdentifier());
+	if (DefaultWeapon)
+	{
+		EquipWeapon(DefaultWeapon->GetIdentifier());
+	}	
 }
