@@ -58,7 +58,7 @@ protected:
 	int BaseHealthMax = 100;
 
 	UPROPERTY(EditAnywhere, Category = "Health")
-	int OverHealthMax = 125; // Max health, including base-health and overhealth
+	int OverHealthMax = 175; // Max health, including base-health and overhealth
 
 	UPROPERTY(EditAnywhere, Category = "Health")
 	float OverHealthDecayInterval = 1.f; // Time (seconds) between over-health decay ticks. 
@@ -86,7 +86,7 @@ protected:
 	int BaseArmourMax = 75;
 
 	UPROPERTY(EditAnywhere, Category = "Health")
-	int OverArmourMax = 100; // Max armour, including base-armour and overarmour
+	int OverArmourMax = 175; // Max armour, including base-armour and overarmour
 
 	UPROPERTY(EditAnywhere, Category = "Health")
 	float OverArmourDecayInterval = 1.f; // Time (seconds) between over-Armour decay ticks. 
