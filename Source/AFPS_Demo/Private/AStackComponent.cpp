@@ -89,6 +89,12 @@ bool UAStackComponent::AddHealth(const int Amount, const bool bCanOverHeal, AAct
 		return false;
 	}
 
+	if (Amount == 0)
+	{
+		UE_LOG(LogTemp, Log, TEXT("Skipping AddHealth with Amount == 0"));
+		return false;
+	}
+
 	if (!bCanOverHeal && Health >= BaseHealthMax)
 	{
 		UE_LOG(LogTemp, Log, TEXT("Couldn't add health as player already at or above BaseHealthMax, and this heal can't overheal"));
@@ -118,6 +124,12 @@ bool UAStackComponent::AddArmour(const int Amount, const bool bCanOverHeal, AAct
 	if (Amount < 0)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Tried to add negative [%d] armour"), Amount);
+		return false;
+	}
+
+	if (Amount == 0)
+	{
+		UE_LOG(LogTemp, Log, TEXT("Skipping AddArmour with Amount == 0"));
 		return false;
 	}
 
