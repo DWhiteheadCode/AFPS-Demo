@@ -42,7 +42,7 @@ void AABasePickup::OnCooldownEnd()
 		return;
 	}
 
-	bIsOnCooldown = true;
+	bIsOnCooldown = false;
 	UpdatePickupState();
 }
 
