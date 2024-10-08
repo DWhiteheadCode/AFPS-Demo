@@ -11,6 +11,8 @@ class UCameraComponent;
 class UInputMappingContext;
 class UInputAction;
 
+class UAStackComponent;
+
 UCLASS()
 class AFPS_DEMO_API AAPlayerCharacter : public ACharacter
 {
@@ -24,8 +26,12 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+	// COMPONENTS -------------------------------------------------------
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	TObjectPtr<UCameraComponent> CameraComp;
+
+	UPROPERTY(VisibleAnywhere, Category = "Components")
+	TObjectPtr<UAStackComponent> HealthComp;
 
 	// INPUT ------------------------------------------------------------
 	// IMC
