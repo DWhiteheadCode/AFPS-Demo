@@ -140,9 +140,9 @@ bool UAStackComponent::AddArmour(const int Amount, const bool bCanOverHeal, AAct
 	}
 
 	const int OldArmour = Armour;
-	const int NewMaxArmour = bCanOverHeal ? OverHealthMax : BaseHealthMax;
+	const int NewMaxArmour = bCanOverHeal ? OverArmourMax : BaseArmourMax;
 
-	Health = FMath::Min((Armour + Amount), NewMaxArmour);
+	Armour = FMath::Min((Armour + Amount), NewMaxArmour);
 
 	const int ActualArmourDelta = Armour - OldArmour;
 
