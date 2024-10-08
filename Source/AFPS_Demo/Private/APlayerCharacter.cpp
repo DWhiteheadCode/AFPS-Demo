@@ -12,6 +12,7 @@ AAPlayerCharacter::AAPlayerCharacter()
 	CameraComp = CreateDefaultSubobject<UCameraComponent>("CameraComp");
 	CameraComp->SetupAttachment(RootComponent);
 	CameraComp->bUsePawnControlRotation = true;
+	CameraComp->SetRelativeLocation(FVector(0, 0, 90)); // Place camera in mesh's head
 
 	WeaponComp = CreateDefaultSubobject<UAWeaponContainerComponent>("WeaponComp");
 	HealthComp = CreateDefaultSubobject<UAStackComponent>("HealthComp");
