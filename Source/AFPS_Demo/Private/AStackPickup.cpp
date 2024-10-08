@@ -21,9 +21,12 @@ void AAStackPickup::OnBeginOverlap_Implementation(UPrimitiveComponent* Overlappe
 
 	if (StackComp)
 	{
-		if (StackComp->AddHealth(HealAmount, bCanOverheal, this)) // Heal was successful
+		bool bHealedHealth = StackComp->AddHealth(HealthAmount, bCanOverhealHealth, this);
+		bool bHealedArmour = StackComp->AddArmour(ArmourAmount, bCanOverhealArmour, this);
+
+		if (bHealedHealth || bHealedArmour)
 		{
 			StartCooldown();
-		}
+		}		
 	}
 }

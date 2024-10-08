@@ -17,8 +17,14 @@ protected:
 		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) override;
 
 	UPROPERTY(EditAnywhere, Category="Health")
-	int HealAmount = 25;
+	int HealthAmount = 25;
 
 	UPROPERTY(EditAnywhere, Category = "Health")
-	bool bCanOverheal = false;
+	bool bCanOverhealHealth = false;
+
+	UPROPERTY(EditAnywhere, Category = "Health")
+	int ArmourAmount = 0;
+
+	UPROPERTY(EditAnywhere, Category = "Health")
+	bool bCanOverhealArmour = false;
 };
