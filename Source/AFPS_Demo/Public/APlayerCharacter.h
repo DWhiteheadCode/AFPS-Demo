@@ -10,7 +10,9 @@
 class UCameraComponent;
 class UInputMappingContext;
 class UInputAction;
+
 class UAWeaponContainerComponent;
+class UAStackComponent;
 
 UCLASS()
 class AFPS_DEMO_API AAPlayerCharacter : public ACharacter
@@ -31,6 +33,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	TObjectPtr<UAWeaponContainerComponent> WeaponComp;
+
+	UPROPERTY(VisibleAnywhere, Category = "Components")
+	TObjectPtr<UAStackComponent> HealthComp;
 
 	// INPUT ------------------------------------------------------------
 	// IMC

@@ -5,6 +5,7 @@
 #include "EnhancedInputComponent.h"
 
 #include "AWeaponContainerComponent.h"
+#include "AStackComponent.h"
 
 AAPlayerCharacter::AAPlayerCharacter()
 {
@@ -13,6 +14,7 @@ AAPlayerCharacter::AAPlayerCharacter()
 	CameraComp->bUsePawnControlRotation = true;
 
 	WeaponComp = CreateDefaultSubobject<UAWeaponContainerComponent>("WeaponComp");
+	HealthComp = CreateDefaultSubobject<UAStackComponent>("HealthComp");
 }
 
 void AAPlayerCharacter::BeginPlay()
