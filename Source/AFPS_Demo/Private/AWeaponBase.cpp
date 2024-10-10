@@ -47,17 +47,23 @@ void AAWeaponBase::EquipWeapon()
 
 void AAWeaponBase::UnequipWeapon()
 {
+	if (bIsFiring)
+	{
+		StopFire();
+	}
+
 	MeshComp->SetVisibility(false, true);
 }
 
 void AAWeaponBase::StartFire()
 {
-	if (GetWorldTimerManager().IsTimerActive(TimerHandle_FireDelay))
+	if (bIsFiring)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Tried to start weapon firing while already firing"));
 		return;
 	}
 
+	bIsFiring = true;
 	float InitialDelay = 0.f;
 
 	if (LastFireTime >= 0) // Weapon has been fired before
@@ -78,12 +84,13 @@ void AAWeaponBase::StartFire()
 
 void AAWeaponBase::StopFire()
 {
-	if (!GetWorldTimerManager().IsTimerActive(TimerHandle_FireDelay))
+	if (!bIsFiring)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Tried to stop weapon firing while not already firing"));
 		return;
 	}
 
+	bIsFiring = false;
 	GetWorldTimerManager().ClearTimer(TimerHandle_FireDelay);
 }
 
@@ -100,9 +107,14 @@ void AAWeaponBase::Fire_Implementation()
 	UE_LOG(LogTemp, Log, TEXT("Fired [%s] - Remaining Ammo: [%d]"), *GetNameSafe(this), Ammo);
 }
 
-bool AAWeaponBase::CanFire()
+bool AAWeaponBase::CanFire() const
 {
 	return Ammo > 0;
+}
+
+bool AAWeaponBase::IsFiring() const
+{
+	return bIsFiring;
 }
 
 FGameplayTag AAWeaponBase::GetIdentifier() const
@@ -112,7 +124,7 @@ FGameplayTag AAWeaponBase::GetIdentifier() const
 
 void AAWeaponBase::OnFireDelayEnd()
 {
-	// Setting this (even if the weapon can't' fire) means it can't attempt to fire again too soon
+	// Setting this (even if the weapon can't fire) means it can't attempt to fire again too soon
 	LastFireTime = GetWorld()->GetTimeSeconds();
 
 	if (CanFire())

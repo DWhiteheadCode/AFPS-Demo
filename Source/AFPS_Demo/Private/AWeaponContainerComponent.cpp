@@ -143,8 +143,20 @@ void UAWeaponContainerComponent::EquipWeapon(FGameplayTag InIdentifier)
 		{
 			UE_LOG( LogTemp, Log, TEXT("Equipping weapon: [%s]"), *(InIdentifier.GetTagName().ToString()) );
 
+			bool bWasFiring = false;
+			if (EquippedWeapon)
+			{		
+				bWasFiring = EquippedWeapon->IsFiring();
+				EquippedWeapon->UnequipWeapon();
+			}
+			
 			Weapon->EquipWeapon();
 			EquippedWeapon = Weapon;
+
+			if (bWasFiring) // Player still has trigger held down
+			{
+				Weapon->StartFire();
+			}
 		}
 	}
 }

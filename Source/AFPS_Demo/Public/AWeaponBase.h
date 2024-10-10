@@ -43,7 +43,10 @@ public:
 	void Fire();
 
 	UFUNCTION()
-	bool CanFire();
+	bool CanFire() const;
+
+	UFUNCTION(BlueprintCallable)
+	bool IsFiring() const;
 
 	UFUNCTION()
 	FGameplayTag GetIdentifier() const;
@@ -79,4 +82,7 @@ protected:
 
 	UPROPERTY()
 	float LastFireTime = -1.f;
+
+	UPROPERTY()
+	bool bIsFiring = false;
 };
