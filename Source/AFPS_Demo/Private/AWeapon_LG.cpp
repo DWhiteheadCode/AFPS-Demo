@@ -14,13 +14,13 @@ void AAWeapon_LG::Fire_Implementation()
 {
 	if (!CanFire())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Tried to fire Rail, but CanFire() returned false"));
+		UE_LOG(LogTemp, Warning, TEXT("Tried to fire LG, but CanFire() returned false"));
 		return;
 	}
 
 	if (!OwningPlayer)
 	{
-		UE_LOG(LogTemp, Error, TEXT("Tried to GetComponentsToDamage, but didn't have OwningPlayer"));
+		UE_LOG(LogTemp, Error, TEXT("Tried to fire LG, but OwningPlayer was null"));
 		return;
 	}
 
