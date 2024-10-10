@@ -16,48 +16,59 @@ void AAWeapon_Rail::Fire_Implementation()
 		return;
 	}
 
+	Super::Fire_Implementation();
+
+	TArray<UAStackComponent*> HitStackComponents = GetComponentsToDamage();
+
+	for (UAStackComponent* StackComp : HitStackComponents)
+	{
+		if (StackComp)
+		{
+			StackComp->ApplyDamage(Damage, OwningPlayer);
+		}
+	}
+}
+
+TArray<UAStackComponent*> AAWeapon_Rail::GetComponentsToDamage() const
+{
 	if (!OwningPlayer)
 	{
-		UE_LOG(LogTemp, Error, TEXT("Tried to fire rail, but didn't have OwningPlayer"));
-		return;
+		UE_LOG(LogTemp, Error, TEXT("Tried to GetComponentsToDamage, but didn't have OwningPlayer"));
+		return TArray<UAStackComponent*>();
 	}
-
-	Super::Fire_Implementation();
 
 	FVector StartPos = OwningPlayer->GetPawnViewLocation();
 	FRotator FiringDirection = OwningPlayer->GetControlRotation();
 
-	FVector EndPos = StartPos + (FiringDirection.Vector() * Range);	
+	FVector EndPos = StartPos + (FiringDirection.Vector() * Range);
 
-	FCollisionObjectQueryParams Params;
-	Params.AddObjectTypesToQuery(ECC_Pawn);
-	Params.AddObjectTypesToQuery(ECC_WorldStatic);
-	
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActor(OwningPlayer);
 	QueryParams.AddIgnoredActor(this);
-	
-	FHitResult HitResult;
-	GetWorld()->LineTraceSingleByObjectType(HitResult, StartPos, EndPos, Params, QueryParams);
 
-	AActor* HitActor = HitResult.GetActor();
-	if (HitActor)
+	TArray<FHitResult> HitResults;
+	GetWorld()->LineTraceMultiByChannel(HitResults, StartPos, EndPos, TraceChannel, QueryParams);
+
+	TArray<UAStackComponent*> ComponentsToDamage;
+
+	for (FHitResult Hit : HitResults)
 	{
-		UAStackComponent* StackComp = Cast<UAStackComponent>(HitActor->GetComponentByClass(UAStackComponent::StaticClass()));
-
-		if (StackComp)
+		FColor DebugColor = FColor::Blue;
+		
+		AActor* HitActor = Hit.GetActor();
+		if (HitActor)
 		{
-			StackComp->ApplyDamage(Damage, OwningPlayer); 
+			UAStackComponent* StackComp = Cast<UAStackComponent>(HitActor->GetComponentByClass(UAStackComponent::StaticClass()));
+
+			if (StackComp)
+			{
+				ComponentsToDamage.Add(StackComp);
+				DebugColor = FColor::Red;
+			}
 		}
-	}
 
-	if (HitResult.bBlockingHit)
-	{
-		DrawDebugLine(GetWorld(), StartPos, HitResult.ImpactPoint, FColor::Blue, false, 2.f, 0, 2.f);
+		DrawDebugSphere(GetWorld(), Hit.ImpactPoint, 10.f, 16, DebugColor, false, 3.f, 0, 1.f);
 	}
-	else
-	{
-		DrawDebugLine(GetWorld(), StartPos, HitResult.TraceEnd, FColor::Blue, false, 2.f, 0, 2.f);
-	}
-
+	
+	return ComponentsToDamage;
 }

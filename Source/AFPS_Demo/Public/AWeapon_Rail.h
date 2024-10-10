@@ -4,6 +4,8 @@
 #include "AWeaponBase.h"
 #include "AWeapon_Rail.generated.h"
 
+class UAStackComponent;
+
 /**
  * 
  */
@@ -23,5 +25,11 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Damage")
 	float Range = 10000.f;
+
+	UFUNCTION()
+	TArray<UAStackComponent*> GetComponentsToDamage() const;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Trace")
+	TEnumAsByte<ECollisionChannel> TraceChannel;
 
 };
