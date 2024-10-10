@@ -5,6 +5,8 @@
 
 AAWeapon_Rail::AAWeapon_Rail()
 {
+	MaxAmmo = 10;
+	StartingAmmo = 10;
 	FireDelay = 1.7f;
 }
 
