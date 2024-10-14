@@ -2,7 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "ARocketProjectile.generated.h"
+#include "AProjectile_Rocket.generated.h"
 
 class UStaticMeshComponent;
 class UProjectileMovementComponent;
@@ -11,12 +11,12 @@ class USphereComponent;
 class UAStackComponent;
 
 UCLASS()
-class AFPS_DEMO_API AARocketProjectile : public AActor
+class AFPS_DEMO_API AAProjectile_Rocket : public AActor
 {
 	GENERATED_BODY()
 	
 public:	
-	AARocketProjectile();
+	AAProjectile_Rocket();
 
 	void PostInitializeComponents() override;
 

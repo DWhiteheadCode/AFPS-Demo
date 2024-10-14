@@ -1,4 +1,4 @@
-#include "ARocketProjectile.h"
+#include "AProjectile_Rocket.h"
 
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/StaticMeshComponent.h"
@@ -8,7 +8,7 @@
 
 #include "AStackComponent.h"
 
-AARocketProjectile::AARocketProjectile()
+AAProjectile_Rocket::AAProjectile_Rocket()
 {
 	SphereComp = CreateDefaultSubobject<USphereComponent>("SphereComp");
 	SphereComp->SetSphereRadius(CollisionRadius);
@@ -27,14 +27,14 @@ AARocketProjectile::AARocketProjectile()
 	ProjectileMovementComp->InitialSpeed = 1000.f;
 }
 
-void AARocketProjectile::PostInitializeComponents()
+void AAProjectile_Rocket::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
 
-    SphereComp->OnComponentBeginOverlap.AddDynamic(this, &AARocketProjectile::OnBeginOverlap);
+    SphereComp->OnComponentBeginOverlap.AddDynamic(this, &AAProjectile_Rocket::OnBeginOverlap);
 }
 
-void AARocketProjectile::OnBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+void AAProjectile_Rocket::OnBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	// Can't direct-hit self
 	if (OtherActor == GetInstigator())
@@ -45,7 +45,7 @@ void AARocketProjectile::OnBeginOverlap(UPrimitiveComponent* OverlappedComponent
     Detonate();
 }
 
-void AARocketProjectile::Detonate()
+void AAProjectile_Rocket::Detonate()
 {
 	DrawDebugSphere(GetWorld(), GetActorLocation(), CloseFalloffRange, 16, FColor::White, false, 5.f, 0, 1.f);
 	DrawDebugSphere(GetWorld(), GetActorLocation(), FarFalloffRange, 16, FColor::White, false, 5.f, 0, 1.f);
@@ -76,7 +76,7 @@ void AARocketProjectile::Detonate()
 	SetLifeSpan(2.f);
 }
 
-TArray<AActor*> AARocketProjectile::GetNearbyActors() const
+TArray<AActor*> AAProjectile_Rocket::GetNearbyActors() const
 {
     TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
     ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECC_Pawn));
@@ -89,7 +89,7 @@ TArray<AActor*> AARocketProjectile::GetNearbyActors() const
     return NearbyActors;
 }
 
-int AARocketProjectile::CalculateDamage(AActor* ActorToDamage) const
+int AAProjectile_Rocket::CalculateDamage(AActor* ActorToDamage) const
 {
 	if (FarFalloffRange <= 0.f)
 	{
@@ -157,7 +157,7 @@ int AARocketProjectile::CalculateDamage(AActor* ActorToDamage) const
 // is blocked, regardless of if there is valid LOS to another part of the Actor.
 //
 // TODO - Work on better solution
-bool AARocketProjectile::IsDamagePathBlocked(AActor* ActorToDamage) const
+bool AAProjectile_Rocket::IsDamagePathBlocked(AActor* ActorToDamage) const
 {
 	if (!ActorToDamage)
 	{
