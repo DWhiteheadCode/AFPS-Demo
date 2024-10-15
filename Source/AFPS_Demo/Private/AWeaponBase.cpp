@@ -50,6 +50,8 @@ void AAWeaponBase::EquipWeapon()
 
 	bIsEquipped = true;
 	MeshComp->SetVisibility(true, true);
+
+	OnEquipStateChanged.Broadcast(this, true);
 }
 
 void AAWeaponBase::UnequipWeapon()
@@ -61,13 +63,15 @@ void AAWeaponBase::UnequipWeapon()
 	}
 
 	bIsEquipped = false;
-
+	
 	if (bIsFiring)
 	{
 		StopFire();
 	}
 
 	MeshComp->SetVisibility(false, true);
+
+	OnEquipStateChanged.Broadcast(this, false);
 }
 
 void AAWeaponBase::StartFire()
@@ -120,6 +124,8 @@ void AAWeaponBase::Fire_Implementation()
 	Ammo--;
 	LastFireTime = GetWorld()->GetTimeSeconds();
 	UE_LOG(LogTemp, Log, TEXT("Fired [%s] - Remaining Ammo: [%d]"), *GetNameSafe(this), Ammo);
+
+	OnAmmoChanged.Broadcast(this, Ammo, Ammo + 1, MaxAmmo);
 }
 
 bool AAWeaponBase::CanFire() const
@@ -140,6 +146,16 @@ bool AAWeaponBase::IsEquipped() const
 FGameplayTag AAWeaponBase::GetIdentifier() const
 {
 	return Identifier;
+}
+
+int AAWeaponBase::GetAmmo() const
+{
+	return Ammo;
+}
+
+int AAWeaponBase::GetMaxAmmo() const
+{
+	return MaxAmmo;
 }
 
 void AAWeaponBase::OnFireDelayEnd()

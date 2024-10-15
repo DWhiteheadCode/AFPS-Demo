@@ -13,6 +13,9 @@ class UInputMappingContext;
 class AAWeaponBase;
 class AAPlayerCharacter;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnWeaponAdded, UAWeaponContainerComponent*, OwningComp, AAWeaponBase*, Weapon);
+
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class AFPS_DEMO_API UAWeaponContainerComponent : public UActorComponent
 {
@@ -27,6 +30,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	TArray<AAWeaponBase*> GetWeapons() const;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnWeaponAdded OnWeaponAdded;
 
 protected:
 	virtual void BeginPlay() override;

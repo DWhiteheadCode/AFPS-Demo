@@ -89,6 +89,9 @@ bool UAWeaponContainerComponent::InstantiateWeapon(TSubclassOf<AAWeaponBase> Wea
 
 	NewWeapon->SetOwningPlayer(OwningCharacter);
 	Weapons.Add(NewWeapon);
+
+	OnWeaponAdded.Broadcast(this, NewWeapon);
+
 	return true;
 }
 

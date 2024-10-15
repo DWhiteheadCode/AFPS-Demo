@@ -11,8 +11,9 @@ class UStaticMeshComponent;
 
 class AAPlayerCharacter;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnWeaponStateChanged, AAWeaponBase*, Weapon, bool, bIsEquipped);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnEquipStateChanged, AAWeaponBase*, Weapon, bool, bIsEquipped);
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnAmmoChanged, AAWeaponBase*, Weapon, int, NewAmmo, int, OldAmmo, int, MaxAmmo);
 
 UCLASS()
 class AFPS_DEMO_API AAWeaponBase : public AActor
@@ -54,11 +55,22 @@ public:
 	UFUNCTION(BlueprintCallable)
 	bool IsEquipped () const;
 
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable)
 	FGameplayTag GetIdentifier() const;
 
 	UPROPERTY(BlueprintAssignable)
-	FOnWeaponStateChanged OnWeaponStateChanged;
+	FOnEquipStateChanged OnEquipStateChanged;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnAmmoChanged OnAmmoChanged;
+
+	UFUNCTION(BlueprintCallable)
+	int GetAmmo() const;
+
+	UFUNCTION(BlueprintCallable)
+	int GetMaxAmmo() const;
+
+
 
 protected:
 	UFUNCTION()
