@@ -174,3 +174,8 @@ void UAWeaponContainerComponent::EquipDefaultWeapon()
 		EquipWeapon(DefaultWeapon->GetIdentifier());
 	}	
 }
+
+TArray<AAWeaponBase*> UAWeaponContainerComponent::GetWeapons() const
+{
+	return Weapons;
+}

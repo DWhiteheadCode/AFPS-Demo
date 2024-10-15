@@ -25,6 +25,9 @@ public:
 
 	void EquipDefaultWeapon();
 
+	UFUNCTION(BlueprintCallable)
+	TArray<AAWeaponBase*> GetWeapons() const;
+
 protected:
 	virtual void BeginPlay() override;
 

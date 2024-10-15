@@ -42,11 +42,26 @@ bool AAWeaponBase::SetOwningPlayer(AAPlayerCharacter* InOwner)
 
 void AAWeaponBase::EquipWeapon()
 {
+	if (bIsEquipped)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Weapon [%s] tried to equip while already equipped"), *GetNameSafe(this));
+		return;
+	}
+
+	bIsEquipped = true;
 	MeshComp->SetVisibility(true, true);
 }
 
 void AAWeaponBase::UnequipWeapon()
 {
+	if (!bIsEquipped)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Weapon [%s] tried to unequip while already unequipped"), *GetNameSafe(this));
+		return;
+	}
+
+	bIsEquipped = false;
+
 	if (bIsFiring)
 	{
 		StopFire();
@@ -115,6 +130,11 @@ bool AAWeaponBase::CanFire() const
 bool AAWeaponBase::IsFiring() const
 {
 	return bIsFiring;
+}
+
+bool AAWeaponBase::IsEquipped() const
+{
+	return bIsEquipped;
 }
 
 FGameplayTag AAWeaponBase::GetIdentifier() const

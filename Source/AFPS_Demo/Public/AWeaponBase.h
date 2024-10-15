@@ -11,6 +11,9 @@ class UStaticMeshComponent;
 
 class AAPlayerCharacter;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnWeaponStateChanged, AAWeaponBase*, Weapon, bool, bIsEquipped);
+
+
 UCLASS()
 class AFPS_DEMO_API AAWeaponBase : public AActor
 {
@@ -48,8 +51,14 @@ public:
 	UFUNCTION(BlueprintCallable)
 	bool IsFiring() const;
 
+	UFUNCTION(BlueprintCallable)
+	bool IsEquipped () const;
+
 	UFUNCTION()
 	FGameplayTag GetIdentifier() const;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnWeaponStateChanged OnWeaponStateChanged;
 
 protected:
 	UFUNCTION()
@@ -85,4 +94,8 @@ protected:
 
 	UPROPERTY()
 	bool bIsFiring = false;
+
+
+	UPROPERTY()
+	bool bIsEquipped = false;
 };
