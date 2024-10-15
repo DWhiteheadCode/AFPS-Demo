@@ -7,7 +7,7 @@ AAWeapon_LG::AAWeapon_LG()
 {
 	MaxAmmo = 150;
 	StartingAmmo = 100;
-	FireDelay = 0.2f;
+	FireDelay = 0.055f;
 }
 
 void AAWeapon_LG::Fire_Implementation()
