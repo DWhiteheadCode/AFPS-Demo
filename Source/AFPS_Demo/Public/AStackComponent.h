@@ -77,10 +77,10 @@ protected:
 	int Armour = 50;
 
 	UPROPERTY(EditAnywhere, Category = "Armour")
-	int StartingArmour = 50;
+	float ArmourEfficiency = 0.67f; // Ratio of damage dealt that is applied to armour
 
 	UPROPERTY(EditAnywhere, Category = "Armour")
-	float ArmourEfficiency = 0.67f; // Ratio of damage dealt that is applied to armour
+	int StartingArmour = 50;	
 
 	UPROPERTY(EditAnywhere, Category = "Armour")
 	int BaseArmourMax = 75;
