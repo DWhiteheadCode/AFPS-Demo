@@ -26,13 +26,13 @@ void UAStackComponent::BeginPlay()
 	}
 
 	// Started with overhealth, so start decay timer
-	if (Health > BaseHealthMax)
+	if (Health > BaseHealthMax && OverHealthDecayInterval > 0.f)
 	{
 		GetWorld()->GetTimerManager().SetTimer(TimerHandle_OverHealthDecay, this, &UAStackComponent::DecayOverHealth, OverHealthDecayInterval);
 	}
 
 	// Started with overarmour, so start decay timer
-	if (Armour > BaseArmourMax)
+	if (Armour > BaseArmourMax && OverArmourDecayInterval > 0.f)
 	{
 		GetWorld()->GetTimerManager().SetTimer(TimerHandle_OverArmourDecay, this, &UAStackComponent::DecayOverArmour, OverArmourDecayInterval);
 	}
@@ -118,7 +118,7 @@ bool UAStackComponent::AddHealth(const int Amount, const bool bCanOverHeal, AAct
 	OnStackChanged.Broadcast(this, InstigatorActor, Health, ActualHealthDelta, Armour, 0);
 
 	// This healed overhealth, so set/reset decay timer
-	if (bCanOverHeal && Health > BaseHealthMax)
+	if (bCanOverHeal && Health > BaseHealthMax && OverHealthDecayInterval > 0.f)
 	{
 		GetWorld()->GetTimerManager().SetTimer(TimerHandle_OverHealthDecay, this, &UAStackComponent::DecayOverHealth, OverHealthDecayInterval);
 	}
@@ -156,7 +156,7 @@ bool UAStackComponent::AddArmour(const int Amount, const bool bCanOverHeal, AAct
 	OnStackChanged.Broadcast(this, InstigatorActor, Health, 0, Armour, ActualArmourDelta);
 
 	// This healed overarmour, so set/reset decay timer
-	if (bCanOverHeal && Armour > BaseArmourMax)
+	if (bCanOverHeal && Armour > BaseArmourMax && OverArmourDecayInterval > 0.f)
 	{
 		GetWorld()->GetTimerManager().SetTimer(TimerHandle_OverArmourDecay, this, &UAStackComponent::DecayOverArmour, OverArmourDecayInterval);
 	}
