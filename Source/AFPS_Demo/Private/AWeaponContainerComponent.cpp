@@ -11,6 +11,19 @@ UAWeaponContainerComponent::UAWeaponContainerComponent()
 	
 }
 
+AAWeaponBase* UAWeaponContainerComponent::GetWeapon(FGameplayTag WeaponIdentifier) const
+{
+	for (AAWeaponBase* Weapon : Weapons)
+	{
+		if (Weapon && Weapon->GetIdentifier() == WeaponIdentifier)
+		{
+			return Weapon;
+		}
+	}
+
+	return nullptr;
+}
+
 void UAWeaponContainerComponent::BeginPlay()
 {
 	Super::BeginPlay();
@@ -35,9 +48,9 @@ void UAWeaponContainerComponent::BeginPlay()
 				EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Completed, this, &UAWeaponContainerComponent::OnFireStop);
 
 				// Weapon Switching
-				EnhancedInputComponent->BindAction(EquipRocketAction, ETriggerEvent::Triggered, this, &UAWeaponContainerComponent::OnEquipWeaponInput);
-				EnhancedInputComponent->BindAction(EquipLGAction, ETriggerEvent::Triggered, this, &UAWeaponContainerComponent::OnEquipWeaponInput);
-				EnhancedInputComponent->BindAction(EquipRailAction, ETriggerEvent::Triggered, this, &UAWeaponContainerComponent::OnEquipWeaponInput);
+				EnhancedInputComponent->BindAction(EquipRocketAction, ETriggerEvent::Triggered, this, &UAWeaponContainerComponent::OnEquipRocketInput);
+				EnhancedInputComponent->BindAction(EquipLGAction, ETriggerEvent::Triggered, this, &UAWeaponContainerComponent::OnEquipLGInput);
+				EnhancedInputComponent->BindAction(EquipRailAction, ETriggerEvent::Triggered, this, &UAWeaponContainerComponent::OnEquipRailInput);
 			}
 		}
 	}
@@ -77,7 +90,7 @@ bool UAWeaponContainerComponent::InstantiateWeapon(TSubclassOf<AAWeaponBase> Wea
 	}
 
 	// Check that NewWeapon's identifier is unique for this component
-	// TODO Lok for a better way to do this (currently O(n), same as other operations on Weapons array)
+	// TODO Look for a better way to do this (currently O(n), same as other operations on Weapons array)
 	for (AAWeaponBase* Weapon : Weapons)
 	{
 		if (Weapon && Weapon->GetIdentifier() == NewWeapon->GetIdentifier())
@@ -95,29 +108,13 @@ bool UAWeaponContainerComponent::InstantiateWeapon(TSubclassOf<AAWeaponBase> Wea
 	return true;
 }
 
-void UAWeaponContainerComponent::OnEquipWeaponInput(const FInputActionInstance& Input)
-{
-	if (Input.GetSourceAction() == EquipRocketAction)
-	{
-		EquipWeapon(RocketGameplayTag);
-	}
-	else if (Input.GetSourceAction() == EquipLGAction)
-	{
-		EquipWeapon(LGGameplayTag);
-	}
-	else if (Input.GetSourceAction() == EquipRailAction)
-	{
-		EquipWeapon(RailGameplayTag);
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("OnEquipWeaponInput couldn't handle input type."));
-	}
-}
-
 void UAWeaponContainerComponent::OnFireStart()
 {
-	if (EquippedWeapon)
+	if (bIsUnequippingWeapon || bIsEquippingWeapon)
+	{
+		bShouldFireOnSwapEnd = true;
+	}
+	else if (EquippedWeapon)
 	{
 		EquippedWeapon->StartFire();
 	}
@@ -125,42 +122,145 @@ void UAWeaponContainerComponent::OnFireStart()
 
 void UAWeaponContainerComponent::OnFireStop()
 {
-	if (EquippedWeapon)
+	if (bIsUnequippingWeapon || bIsEquippingWeapon)
+	{
+		bShouldFireOnSwapEnd = false;
+	}
+	else if (EquippedWeapon)
 	{
 		EquippedWeapon->StopFire();
 	}
 }
 
-// TODO This is O(n). Could possibly use a Map, though they don't replicate
-// Given n is 9 at most, might be ok to leave as is- need to test performance.
-void UAWeaponContainerComponent::EquipWeapon(FGameplayTag InIdentifier)
+void UAWeaponContainerComponent::ProcessSwapInput(FGameplayTag WeaponIdentifier)
 {
-	for (AAWeaponBase* Weapon : Weapons)
+	// Must wait for the equip to complete before starting a swap to another weapon
+	if (bIsEquippingWeapon)
 	{
-		if (Weapon == EquippedWeapon)
+		UE_LOG(LogTemp, Log, TEXT("Ignoring weapon swap input as a weapon is already being equipped"));
+		return;
+	}
+
+	// Ignore a swap to EquippedWeapon, unless a swap to another weapon had already started
+	if (!bIsUnequippingWeapon)
+	{
+		if (EquippedWeapon && EquippedWeapon->GetIdentifier() == WeaponIdentifier)
 		{
-			continue;
+			UE_LOG(LogTemp, Log, TEXT("Ignoring weapon swap input as that weapon [%s] is already equipped"), *(EquippedWeapon->GetIdentifier().ToString()));
+			return;
 		}
+	}
 
-		if (Weapon && Weapon->GetIdentifier() == InIdentifier)
+	AAWeaponBase* Weapon = GetWeapon(WeaponIdentifier);
+
+	if (!Weapon)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Receivied input to swap to [%s], but found no weapon matching that tag"), *(WeaponIdentifier.GetTagName().ToString()) )
+		return;
+	}
+
+	WeaponToSwapTo = Weapon;
+
+	// Don't start a swap as one is already in progress
+	if (bIsUnequippingWeapon)
+	{
+		UE_LOG(LogTemp, Log, TEXT("Not starting swap as already unequipping a weapon"));
+		return;
+	}	
+	
+	if (EquippedWeapon)
+	{
+		// Used to preserve firing if trigger held through weapon switch
+		bShouldFireOnSwapEnd = EquippedWeapon->IsFiring();
+		if (EquippedWeapon->IsFiring())
 		{
-			UE_LOG( LogTemp, Log, TEXT("Equipping weapon: [%s]"), *(InIdentifier.GetTagName().ToString()) );
-
-			bool bWasFiring = false;
-			if (EquippedWeapon)
-			{		
-				bWasFiring = EquippedWeapon->IsFiring();
-				EquippedWeapon->UnequipWeapon();
-			}
+			EquippedWeapon->StopFire();
+		}
 			
-			Weapon->EquipWeapon();
-			EquippedWeapon = Weapon;
+		// Don't start swapping until EquippedWeapon finishes reloading from its last fired shot
+		float PreSwapDelay = EquippedWeapon->GetRemainingFireDelay();
 
-			if (bWasFiring) // Player still has trigger held down
-			{
-				Weapon->StartFire();
-			}
+		if (PreSwapDelay == 0.f)
+		{
+			StartWeaponSwap();
 		}
+		else
+		{
+			GetWorld()->GetTimerManager().SetTimer(TimerHandle_WeaponSwap, this, &UAWeaponContainerComponent::StartWeaponSwap, PreSwapDelay);
+		}		
+	}
+	else // Equipping first weapon
+	{
+		bIsEquippingWeapon = true;
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle_WeaponSwap, this, &UAWeaponContainerComponent::OnWeaponEquipDelayEnd, WeaponEquipDelay);
+	}		
+}
+
+void UAWeaponContainerComponent::StartWeaponSwap()
+{
+	if (bIsUnequippingWeapon || bIsEquippingWeapon)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Attempted to start weapon swap while already swapping weapon."));
+		return;
+	}
+
+	if (!WeaponToSwapTo)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Attempted to StartWeaponSwap() but WeaponToSwapTo was null"));
+		return;
+	}
+
+	bIsUnequippingWeapon = true;
+	GetWorld()->GetTimerManager().SetTimer(TimerHandle_WeaponSwap, this, &UAWeaponContainerComponent::OnWeaponUnequipDelayEnd, WeaponUnequipDelay);
+}
+
+void UAWeaponContainerComponent::OnWeaponUnequipDelayEnd()
+{	
+	if (!bIsUnequippingWeapon)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("OnWeaponUnequipDelayEnd() called, but bIsUnequippingWeapon was false"));
+	}
+
+	if (bIsEquippingWeapon)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("OnWeaponUnequipDelayEnd() called, but bIsEquippingWeapon was true"));
+	}
+
+	if (EquippedWeapon)
+	{
+		EquippedWeapon->UnequipWeapon();
+	}
+
+	bIsUnequippingWeapon = false;
+	bIsEquippingWeapon = true;
+
+	GetWorld()->GetTimerManager().SetTimer(TimerHandle_WeaponSwap, this, &UAWeaponContainerComponent::OnWeaponEquipDelayEnd, WeaponEquipDelay);
+}
+
+void UAWeaponContainerComponent::OnWeaponEquipDelayEnd()
+{
+	if (!WeaponToSwapTo)
+	{
+		UE_LOG(LogTemp, Error, TEXT("OnWeaponEquipDelayEnd() callled, but WeaponToSwapTo was null"));
+		return;
+	}
+
+	if (!bIsEquippingWeapon)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("OnWeaponEquipDelayEnd() called, but bIsEquippingWeapon was false"));
+		return;
+	}
+
+	bIsEquippingWeapon = false;
+
+	WeaponToSwapTo->EquipWeapon();
+
+	EquippedWeapon = WeaponToSwapTo;
+	WeaponToSwapTo = nullptr;
+
+	if (bShouldFireOnSwapEnd)
+	{
+		EquippedWeapon->StartFire();
 	}
 }
 
@@ -174,11 +274,28 @@ void UAWeaponContainerComponent::EquipDefaultWeapon()
 	AAWeaponBase* DefaultWeapon = Weapons[0];
 	if (DefaultWeapon)
 	{
-		EquipWeapon(DefaultWeapon->GetIdentifier());
+		WeaponToSwapTo = DefaultWeapon;
+		bIsEquippingWeapon = true;
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle_WeaponSwap, this, &UAWeaponContainerComponent::OnWeaponEquipDelayEnd, WeaponEquipDelay);
 	}	
 }
 
 TArray<AAWeaponBase*> UAWeaponContainerComponent::GetWeapons() const
 {
 	return Weapons;
+}
+
+void UAWeaponContainerComponent::OnEquipRocketInput()
+{
+	ProcessSwapInput(RocketGameplayTag);
+}
+
+void UAWeaponContainerComponent::OnEquipLGInput()
+{
+	ProcessSwapInput(LGGameplayTag);
+}
+
+void UAWeaponContainerComponent::OnEquipRailInput()
+{
+	ProcessSwapInput(RailGameplayTag);
 }

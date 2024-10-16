@@ -24,8 +24,6 @@ class AFPS_DEMO_API UAWeaponContainerComponent : public UActorComponent
 public:	
 	UAWeaponContainerComponent();
 
-	void EquipWeapon(FGameplayTag InIdentifier);
-
 	void EquipDefaultWeapon();
 
 	UFUNCTION(BlueprintCallable)
@@ -52,6 +50,42 @@ protected:
 	UFUNCTION()
 	bool InstantiateWeapon(TSubclassOf<AAWeaponBase> WeaponClass);
 
+	UFUNCTION()
+	AAWeaponBase* GetWeapon(FGameplayTag WeaponIdentifier) const;
+
+	// WEAPON SWAPPING -------------------------------------------
+	UPROPERTY(EditAnywhere, Category = "Weapon Swapping")
+	float WeaponUnequipDelay = 0.4f;
+
+	UPROPERTY(EditAnywhere, Category = "Weapon Swapping")
+	float WeaponEquipDelay = 0.4f;
+
+	UPROPERTY()
+	bool bShouldFireOnSwapEnd = false;
+
+	UFUNCTION()
+	void ProcessSwapInput(FGameplayTag WeaponIdentifier);
+
+	UFUNCTION()
+	void StartWeaponSwap();
+
+	UFUNCTION()
+	void OnWeaponUnequipDelayEnd();
+
+	UFUNCTION()
+	void OnWeaponEquipDelayEnd();
+
+	UPROPERTY()
+	bool bIsUnequippingWeapon = false;
+
+	UPROPERTY()
+	bool bIsEquippingWeapon = false;
+
+	UPROPERTY()
+	AAWeaponBase* WeaponToSwapTo = nullptr;
+
+	FTimerHandle TimerHandle_WeaponSwap;
+
 	// INPUT ----------------------------------------------------
 	// IMC
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
@@ -66,30 +100,34 @@ protected:
 
 	UFUNCTION()
 	void OnFireStop();
-
-	// ALL WEAPON SWAP INPUTS ---------------
-	// Generic EquipWeaponInput 
-	UFUNCTION()
-	void OnEquipWeaponInput(const FInputActionInstance& Input);
-
-	// Rocket
+	
+	// Equip Rocket
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	TObjectPtr<UInputAction> EquipRocketAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	FGameplayTag RocketGameplayTag;
 
-	// LG
+	UFUNCTION()
+	void OnEquipRocketInput();
+
+	// Equip LG
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	TObjectPtr<UInputAction> EquipLGAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	FGameplayTag LGGameplayTag;
 
-	// Rail
+	UFUNCTION()
+	void OnEquipLGInput();
+
+	// Equip Rail
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	TObjectPtr<UInputAction> EquipRailAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	FGameplayTag RailGameplayTag;
+
+	UFUNCTION()
+	void OnEquipRailInput();
 };
