@@ -13,6 +13,8 @@ void UAStackComponent::BeginPlay()
 	Health = StartingHealth;
 	Armour = StartingArmour;
 
+	OnStackChanged.Broadcast(this, GetOwner(), Health, Health, Armour, Armour);
+
 	if (BaseHealthMax > OverHealthMax)
 	{
 		UE_LOG(LogTemp, Error, TEXT("BaseHealthMax must be <= OverHealthMax."));
