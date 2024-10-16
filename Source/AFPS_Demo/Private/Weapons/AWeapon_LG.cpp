@@ -1,4 +1,4 @@
-#include "AWeapon_LG.h"
+#include "Weapons/AWeapon_LG.h"
 
 #include "APlayerCharacter.h"
 #include "AStackComponent.h"

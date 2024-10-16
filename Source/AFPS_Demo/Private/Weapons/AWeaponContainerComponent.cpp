@@ -1,9 +1,9 @@
-#include "AWeaponContainerComponent.h"
+#include "Weapons/AWeaponContainerComponent.h"
 
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
 
-#include "AWeaponBase.h"
+#include "Weapons/AWeaponBase.h"
 #include "APlayerCharacter.h"
 
 UAWeaponContainerComponent::UAWeaponContainerComponent()
