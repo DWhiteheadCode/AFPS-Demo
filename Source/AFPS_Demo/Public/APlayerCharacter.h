@@ -37,7 +37,7 @@ protected:
 	TObjectPtr<UAWeaponContainerComponent> WeaponComp;
 
 	UPROPERTY(VisibleAnywhere, Category = "Components")
-	TObjectPtr<UAStackComponent> HealthComp;
+	TObjectPtr<UAStackComponent> StackComp;
 
 	// INPUT ------------------------------------------------------------
 	// IMC
