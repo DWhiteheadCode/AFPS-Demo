@@ -70,7 +70,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	int GetMaxAmmo() const;
 
-
+	UFUNCTION()
+	float GetRemainingFireDelay() const;
 
 protected:
 	UFUNCTION()

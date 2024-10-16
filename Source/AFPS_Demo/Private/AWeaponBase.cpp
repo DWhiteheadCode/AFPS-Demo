@@ -158,6 +158,16 @@ int AAWeaponBase::GetMaxAmmo() const
 	return MaxAmmo;
 }
 
+float AAWeaponBase::GetRemainingFireDelay() const
+{
+	if (GetWorldTimerManager().IsTimerActive(TimerHandle_FireDelay))
+	{
+		return GetWorldTimerManager().GetTimerRemaining(TimerHandle_FireDelay);
+	}
+
+	return 0.f;
+}
+
 void AAWeaponBase::OnFireDelayEnd()
 {
 	// Setting this (even if the weapon can't fire) means it can't attempt to fire again too soon
