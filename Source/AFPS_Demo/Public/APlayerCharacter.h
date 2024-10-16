@@ -11,6 +11,7 @@ class UCameraComponent;
 class UInputMappingContext;
 class UInputAction;
 
+class UAWeaponContainerComponent;
 class UAStackComponent;
 
 UCLASS()
@@ -23,12 +24,17 @@ public:
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	virtual FVector GetPawnViewLocation() const override;
+
 protected:
 	virtual void BeginPlay() override;
 
 	// COMPONENTS -------------------------------------------------------
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	TObjectPtr<UCameraComponent> CameraComp;
+
+	UPROPERTY(VisibleAnywhere, Category = "Components")
+	TObjectPtr<UAWeaponContainerComponent> WeaponComp;
 
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	TObjectPtr<UAStackComponent> HealthComp;

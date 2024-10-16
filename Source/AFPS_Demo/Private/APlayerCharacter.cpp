@@ -4,6 +4,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
 
+#include "AWeaponContainerComponent.h"
 #include "AStackComponent.h"
 
 AAPlayerCharacter::AAPlayerCharacter()
@@ -11,7 +12,9 @@ AAPlayerCharacter::AAPlayerCharacter()
 	CameraComp = CreateDefaultSubobject<UCameraComponent>("CameraComp");
 	CameraComp->SetupAttachment(RootComponent);
 	CameraComp->bUsePawnControlRotation = true;
+	CameraComp->SetRelativeLocation(FVector(0, 0, 90)); // Place camera in mesh's head
 
+	WeaponComp = CreateDefaultSubobject<UAWeaponContainerComponent>("WeaponComp");
 	HealthComp = CreateDefaultSubobject<UAStackComponent>("HealthComp");
 }
 
@@ -40,6 +43,11 @@ void AAPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AAPlayerCharacter::Look);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &AAPlayerCharacter::Jump);
 	}
+}
+
+FVector AAPlayerCharacter::GetPawnViewLocation() const
+{
+	return CameraComp->GetComponentLocation();
 }
 
 void AAPlayerCharacter::Move(const FInputActionValue& Value)
