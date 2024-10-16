@@ -34,6 +34,9 @@ protected:
 		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 	
 	// PICKUP FUNCTIONALITY ------------------------------------------
+	UPROPERTY(EditAnywhere, Category="Cooldown")
+	bool bRespawns = true;
+
 	UFUNCTION()
 	void StartCooldown();
 

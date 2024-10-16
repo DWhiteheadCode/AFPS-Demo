@@ -26,7 +26,16 @@ void AAPickup_Stack::OnBeginOverlap_Implementation(UPrimitiveComponent* Overlapp
 
 		if (bHealedHealth || bHealedArmour)
 		{
-			StartCooldown();
+			if (bRespawns)
+			{
+				StartCooldown();
+			}
+			else
+			{
+				bIsOnCooldown = true;
+				UpdatePickupState(); // Stop it being picked up by anyone else
+				SetLifeSpan(2.f);
+			}
 		}		
 	}
 }
