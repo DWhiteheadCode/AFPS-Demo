@@ -16,6 +16,12 @@ AAPlayerCharacter::AAPlayerCharacter()
 
 	WeaponComp = CreateDefaultSubobject<UAWeaponContainerComponent>("WeaponComp");
 	HealthComp = CreateDefaultSubobject<UAStackComponent>("HealthComp");
+
+	USkeletalMeshComponent* CharacterMesh = GetMesh();
+	if (CharacterMesh)
+	{
+		CharacterMesh->bOwnerNoSee = true;
+	}
 }
 
 void AAPlayerCharacter::BeginPlay()
