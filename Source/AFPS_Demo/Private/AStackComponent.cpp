@@ -38,7 +38,7 @@ void UAStackComponent::BeginPlay()
 	}
 }
 
-bool UAStackComponent::ApplyDamage(const int Amount, AActor* InstigatorActor)
+bool UAStackComponent::ApplyDamage(int Amount, AActor* InstigatorActor)
 {
 	if (Amount < 0)
 	{
@@ -57,6 +57,13 @@ bool UAStackComponent::ApplyDamage(const int Amount, AActor* InstigatorActor)
 		UE_LOG(LogTemp, Error, TEXT("BaseArmourMax [%d] can't exceed OverArmourMax [%d]."), BaseArmourMax, OverArmourMax);
 		return false;
 	}
+
+
+	if (InstigatorActor == GetOwner())
+	{
+		Amount *= SelfDamageMultiplier;
+	}
+
 
 	// Do as much damage to Armour as possible, then apply remaining damage to Health
 	const int ArmourPortion = FMath::Min(Armour, Amount * ArmourEfficiency); 

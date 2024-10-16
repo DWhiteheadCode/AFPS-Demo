@@ -28,7 +28,7 @@ public:
 	void BeginPlay() override;
 
 	UFUNCTION(BlueprintCallable)
-	bool ApplyDamage(const int Amount, AActor* InstigatorActor);
+	bool ApplyDamage(int Amount, AActor* InstigatorActor);
 
 	UFUNCTION(BlueprintCallable)
 	bool AddHealth(const int Amount, const bool bCanOverHeal, AActor* InstigatorActor);
@@ -47,6 +47,10 @@ public:
 
 
 protected:
+	// GENERAL ------------------------
+	UPROPERTY(EditAnywhere, Category = "Stack")
+	float SelfDamageMultiplier = 0.67f;
+
 	// HEALTH -------------------------
 	UPROPERTY()
 	int Health = 125;
