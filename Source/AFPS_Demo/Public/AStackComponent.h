@@ -76,22 +76,22 @@ protected:
 	UPROPERTY()
 	int Armour = 50;
 
-	UPROPERTY(EditAnywhere, Category = "Health")
+	UPROPERTY(EditAnywhere, Category = "Armour")
 	int StartingArmour = 50;
 
-	UPROPERTY(EditAnywhere, Category = "Health")
+	UPROPERTY(EditAnywhere, Category = "Armour")
 	float ArmourEfficiency = 0.67f; // Ratio of damage dealt that is applied to armour
 
-	UPROPERTY(EditAnywhere, Category = "Health")
+	UPROPERTY(EditAnywhere, Category = "Armour")
 	int BaseArmourMax = 75;
 
-	UPROPERTY(EditAnywhere, Category = "Health")
+	UPROPERTY(EditAnywhere, Category = "Armour")
 	int OverArmourMax = 175; // Max armour, including base-armour and overarmour
 
-	UPROPERTY(EditAnywhere, Category = "Health")
+	UPROPERTY(EditAnywhere, Category = "Armour")
 	float OverArmourDecayInterval = 1.f; // Time (seconds) between over-Armour decay ticks. 
 
-	UPROPERTY(EditAnywhere, Category = "Health")
+	UPROPERTY(EditAnywhere, Category = "Armour")
 	int OverArmourDecayAmount = 2; // Amount of Armour to decay every OverArmourDecayTime seconds
 
 	UFUNCTION()
