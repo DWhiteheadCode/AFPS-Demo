@@ -1,8 +1,8 @@
-#include "AStackPickup.h"
+#include "Pickups/APickup_Stack.h"
 
 #include "AStackComponent.h"
 
-void AAStackPickup::OnBeginOverlap_Implementation(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, 
+void AAPickup_Stack::OnBeginOverlap_Implementation(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	if (bIsOnCooldown)
