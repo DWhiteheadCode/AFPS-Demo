@@ -4,7 +4,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
 
-#include "AWeaponContainerComponent.h"
+#include "Weapons/AWeaponContainerComponent.h"
 #include "AStackComponent.h"
 
 AAPlayerCharacter::AAPlayerCharacter()

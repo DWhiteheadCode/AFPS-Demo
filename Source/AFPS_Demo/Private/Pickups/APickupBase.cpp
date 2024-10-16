@@ -1,9 +1,9 @@
-#include "ABasePickup.h"
+#include "Pickups/APickupBase.h"
 
 #include "Components/StaticMeshComponent.h"
 #include "Components/SphereComponent.h"
 
-AABasePickup::AABasePickup()
+AAPickupBase::AAPickupBase()
 {
 	SphereComp = CreateDefaultSubobject<USphereComponent>("SphereComp");
 	SphereComp->SetSphereRadius(CollisionRadius);
@@ -15,13 +15,13 @@ AABasePickup::AABasePickup()
 	MeshComp->SetupAttachment(RootComponent);
 }
 
-void AABasePickup::PostInitializeComponents()
+void AAPickupBase::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
-	SphereComp->OnComponentBeginOverlap.AddDynamic(this, &AABasePickup::OnBeginOverlap);
+	SphereComp->OnComponentBeginOverlap.AddDynamic(this, &AAPickupBase::OnBeginOverlap);
 }
 
-void AABasePickup::StartCooldown()
+void AAPickupBase::StartCooldown()
 {
 	if (bIsOnCooldown)
 	{
@@ -31,10 +31,10 @@ void AABasePickup::StartCooldown()
 
 	bIsOnCooldown = true;
 	UpdatePickupState();
-	GetWorld()->GetTimerManager().SetTimer(TimerHandle_Cooldown, this, &AABasePickup::OnCooldownEnd, CooldownDuration);
+	GetWorld()->GetTimerManager().SetTimer(TimerHandle_Cooldown, this, &AAPickupBase::OnCooldownEnd, CooldownDuration);
 }
 
-void AABasePickup::OnCooldownEnd()
+void AAPickupBase::OnCooldownEnd()
 {
 	if (!bIsOnCooldown)
 	{
@@ -46,13 +46,13 @@ void AABasePickup::OnCooldownEnd()
 	UpdatePickupState();
 }
 
-void AABasePickup::UpdatePickupState()
+void AAPickupBase::UpdatePickupState()
 {
 	SetActorEnableCollision(!bIsOnCooldown);
 	MeshComp->SetVisibility(!bIsOnCooldown, true);
 }
 
-void AABasePickup::OnBeginOverlap_Implementation(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, 
+void AAPickupBase::OnBeginOverlap_Implementation(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	// Functionality in base class

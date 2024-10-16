@@ -1,7 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "AWeaponBase.h"
+#include "Weapons/AWeaponBase.h"
 #include "AWeapon_RocketLauncher.generated.h"
 
 /**

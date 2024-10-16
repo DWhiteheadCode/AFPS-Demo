@@ -1,4 +1,4 @@
-#include "AWeaponBase.h"
+#include "Weapons/AWeaponBase.h"
 
 #include "Components/StaticMeshComponent.h"
 

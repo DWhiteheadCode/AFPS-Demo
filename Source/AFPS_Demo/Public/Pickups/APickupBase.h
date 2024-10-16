@@ -2,18 +2,18 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "ABasePickup.generated.h"
+#include "APickupBase.generated.h"
 
 class USphereComponent;
 class UStaticMeshComponent;
 
 UCLASS()
-class AFPS_DEMO_API AABasePickup : public AActor
+class AFPS_DEMO_API AAPickupBase : public AActor
 {
 	GENERATED_BODY()
 	
 public:	
-	AABasePickup();
+	AAPickupBase();
 
 	void PostInitializeComponents() override;
 

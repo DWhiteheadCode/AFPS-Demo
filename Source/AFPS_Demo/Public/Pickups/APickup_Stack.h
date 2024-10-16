@@ -1,14 +1,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "ABasePickup.h"
-#include "AStackPickup.generated.h"
+#include "Pickups/APickupBase.h"
+#include "APickup_Stack.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class AFPS_DEMO_API AAStackPickup : public AABasePickup
+class AFPS_DEMO_API AAPickup_Stack : public AAPickupBase
 {
 	GENERATED_BODY()
 	

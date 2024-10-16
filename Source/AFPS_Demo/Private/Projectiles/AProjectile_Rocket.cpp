@@ -1,4 +1,4 @@
-#include "AProjectile_Rocket.h"
+#include "Projectiles/AProjectile_Rocket.h"
 
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/StaticMeshComponent.h"
