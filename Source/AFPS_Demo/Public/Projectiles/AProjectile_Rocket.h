@@ -21,25 +21,32 @@ public:
 	void PostInitializeComponents() override;
 
 protected:
-	// COMPONENTS ----------------------------------
+	// COMPONENTS ----------------------------------------------------------
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	TObjectPtr<UStaticMeshComponent> MeshComp;
 
 	UPROPERTY(VisibleAnywhere, Category = "Components")
-	TObjectPtr<USphereComponent> SphereComp;
+	TObjectPtr<USphereComponent> CollisionSphereComp;
 
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	TObjectPtr<UProjectileMovementComponent> ProjectileMovementComp;
 
+	// DETONATION ----------------------------------------------------------
+	UFUNCTION()
+	void Detonate();
 
-	// COLLISION -----------------------------------
+	// COLLISION -----------------------------------------------------------
 	UPROPERTY(EditAnywhere, Category = "Collision")
 	float CollisionRadius = 16.f; 
 
 	UPROPERTY(EditDefaultsOnly, Category = "Trace")
-	TEnumAsByte<ECollisionChannel> TraceChannel;
+	TEnumAsByte<ECollisionChannel> SplashDamageTraceChannel;
 
-	// DAMAGE --------------------------------------
+	UFUNCTION()
+	void OnBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	// DAMAGE ---------------------------------------------------------------
 	UPROPERTY(EditAnywhere, Category="Damage")
 	int MinDamage = 10;
 
@@ -53,20 +60,12 @@ protected:
 	float FarFalloffRange = 100.f; // Range where MinDamage will be dealt. Also max range to deal any damage.
 
 	UFUNCTION()
-	void Detonate();
-
-	UFUNCTION()
-	TArray<AActor*> GetNearbyActors() const; 
-
-	UFUNCTION()
 	int CalculateDamage(AActor* ActorToDamage) const;
+
+	// HELPER FUNCTIONS ------------------------------------------------------
+	UFUNCTION()
+	TArray<AActor*> GetActorsInExplosionRadius() const; 
 
 	UFUNCTION()
 	bool IsDamagePathBlocked(AActor* ActorToDamage) const;
-
-	// OnBeginOverlap --------------------------------
-	UFUNCTION()
-	void OnBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, 
-		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-
 };
