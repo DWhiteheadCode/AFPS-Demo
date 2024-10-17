@@ -26,9 +26,6 @@ public:
 
 	void EquipDefaultWeapon();
 
-	UFUNCTION(BlueprintCallable)
-	TArray<AAWeaponBase*> GetWeapons() const;
-
 	UPROPERTY(BlueprintAssignable)
 	FOnWeaponAdded OnWeaponAdded;
 
@@ -43,7 +40,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Weapons")
 	TArray<TSubclassOf<AAWeaponBase>> DefaultWeapons;
 		
-	UPROPERTY()
+	UPROPERTY(BlueprintReadOnly)
 	TArray<TObjectPtr<AAWeaponBase>> Weapons;
 
 	UPROPERTY()

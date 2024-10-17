@@ -273,11 +273,6 @@ void UAWeaponContainerComponent::EquipDefaultWeapon()
 	}	
 }
 
-TArray<AAWeaponBase*> UAWeaponContainerComponent::GetWeapons() const
-{
-	return Weapons;
-}
-
 void UAWeaponContainerComponent::OnEquipRocketInput()
 {
 	ProcessSwapInput(RocketGameplayTag);
