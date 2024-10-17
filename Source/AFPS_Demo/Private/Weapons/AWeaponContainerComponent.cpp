@@ -296,7 +296,7 @@ void UAWeaponContainerComponent::OnEquipRailInput()
 	ProcessSwapInput(RailGameplayTag);
 }
 
-AAWeaponBase* UAWeaponContainerComponent::GetWeapon(FGameplayTag WeaponIdentifier) const
+AAWeaponBase* UAWeaponContainerComponent::GetWeapon(const FGameplayTag WeaponIdentifier) const
 {
 	for (AAWeaponBase* Weapon : Weapons)
 	{
