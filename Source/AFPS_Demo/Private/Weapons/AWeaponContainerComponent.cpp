@@ -71,7 +71,7 @@ bool UAWeaponContainerComponent::InstantiateWeapon(TSubclassOf<AAWeaponBase> Wea
 		return false;
 	}
 
-	FTransform SpawnTransform = FTransform(OwningCharacter->GetControlRotation(), OwningCharacter->GetActorLocation());
+	const FTransform SpawnTransform = FTransform(OwningCharacter->GetControlRotation(), OwningCharacter->GetActorLocation());
 
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.Owner = OwningCharacter;

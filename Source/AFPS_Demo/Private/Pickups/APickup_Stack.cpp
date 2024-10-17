@@ -23,8 +23,8 @@ void AAPickup_Stack::OnBeginOverlap_Implementation(UPrimitiveComponent* Overlapp
 
 	if (StackComp)
 	{
-		bool bHealedHealth = StackComp->AddHealth(HealthAmount, bCanOverhealHealth, this);
-		bool bHealedArmour = StackComp->AddArmour(ArmourAmount, bCanOverhealArmour, this);
+		const bool bHealedHealth = StackComp->AddHealth(HealthAmount, bCanOverhealHealth, this);
+		const bool bHealedArmour = StackComp->AddArmour(ArmourAmount, bCanOverhealArmour, this);
 
 		if (bHealedHealth || bHealedArmour)
 		{

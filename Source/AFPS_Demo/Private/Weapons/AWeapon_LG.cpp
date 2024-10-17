@@ -26,10 +26,10 @@ void AAWeapon_LG::Fire_Implementation()
 
 	Super::Fire_Implementation();
 	
-	FVector StartPos = OwningPlayer->GetPawnViewLocation();
-	FRotator FiringDirection = OwningPlayer->GetControlRotation();
+	const FVector StartPos = OwningPlayer->GetPawnViewLocation();
+	const FRotator FiringDirection = OwningPlayer->GetControlRotation();
 
-	FVector EndPos = StartPos + (FiringDirection.Vector() * Range);
+	const FVector EndPos = StartPos + (FiringDirection.Vector() * Range);
 
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActor(OwningPlayer);
@@ -38,7 +38,7 @@ void AAWeapon_LG::Fire_Implementation()
 	FHitResult HitResult;
 	GetWorld()->LineTraceSingleByChannel(HitResult, StartPos, EndPos, TraceChannel, QueryParams);
 
-	AActor* HitActor = HitResult.GetActor();
+	const AActor* HitActor = HitResult.GetActor();
 	if (HitActor)
 	{
 		UAStackComponent* StackComp = Cast<UAStackComponent>(HitActor->GetComponentByClass(UAStackComponent::StaticClass()));

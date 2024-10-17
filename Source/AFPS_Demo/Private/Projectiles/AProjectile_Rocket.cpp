@@ -50,7 +50,7 @@ void AAProjectile_Rocket::Detonate()
 	DrawDebugSphere(GetWorld(), GetActorLocation(), CloseFalloffRange, 16, FColor::White, false, 5.f, 0, 1.f);
 	DrawDebugSphere(GetWorld(), GetActorLocation(), FarFalloffRange, 16, FColor::White, false, 5.f, 0, 1.f);
 
-    TArray<AActor*> NearbyActors = GetActorsInExplosionRadius();
+    const TArray<AActor*> NearbyActors = GetActorsInExplosionRadius();
  
     for (AActor* Actor : NearbyActors)
     {
@@ -91,7 +91,7 @@ TArray<AActor*> AAProjectile_Rocket::GetActorsInExplosionRadius() const
     return NearbyActors;
 }
 
-int AAProjectile_Rocket::CalculateDamage(AActor* ActorToDamage) const
+int AAProjectile_Rocket::CalculateDamage(const AActor* ActorToDamage) const
 {
 	if (FarFalloffRange <= 0.f)
 	{
@@ -159,7 +159,7 @@ int AAProjectile_Rocket::CalculateDamage(AActor* ActorToDamage) const
 // is blocked, regardless of if there is valid LOS to another part of the Actor.
 //
 // TODO - Leaving it like this for now, but will look for a better solution later.
-bool AAProjectile_Rocket::IsDamagePathBlocked(AActor* ActorToDamage) const
+bool AAProjectile_Rocket::IsDamagePathBlocked(const AActor* ActorToDamage) const
 {
 	if (!ActorToDamage)
 	{
