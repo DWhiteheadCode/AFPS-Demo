@@ -11,53 +11,19 @@ UAWeaponContainerComponent::UAWeaponContainerComponent()
 	
 }
 
-AAWeaponBase* UAWeaponContainerComponent::GetWeapon(FGameplayTag WeaponIdentifier) const
-{
-	for (AAWeaponBase* Weapon : Weapons)
-	{
-		if (Weapon && Weapon->GetIdentifier() == WeaponIdentifier)
-		{
-			return Weapon;
-		}
-	}
-
-	return nullptr;
-}
-
 void UAWeaponContainerComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
 	OwningCharacter = Cast<AAPlayerCharacter>(GetOwner());
 
-	// Set up weapon switch bindings
-	if (OwningCharacter)
+	if (!OwningCharacter)
 	{
-		if (APlayerController* const PlayerController = Cast<APlayerController>(OwningCharacter->GetController()))
-		{
-			if (UEnhancedInputLocalPlayerSubsystem* const Subsystem
-				= ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
-			{
-				Subsystem->AddMappingContext(WeaponInputMappingContext, 0);
-			}
-
-			if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerController->InputComponent))
-			{
-				// Fire
-				EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Started, this, &UAWeaponContainerComponent::OnFireStart);
-				EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Completed, this, &UAWeaponContainerComponent::OnFireStop);
-
-				// Weapon Switching
-				EnhancedInputComponent->BindAction(EquipRocketAction, ETriggerEvent::Triggered, this, &UAWeaponContainerComponent::OnEquipRocketInput);
-				EnhancedInputComponent->BindAction(EquipLGAction, ETriggerEvent::Triggered, this, &UAWeaponContainerComponent::OnEquipLGInput);
-				EnhancedInputComponent->BindAction(EquipRailAction, ETriggerEvent::Triggered, this, &UAWeaponContainerComponent::OnEquipRailInput);
-			}
-		}
+		UE_LOG(LogTemp, Error, TEXT("Initialised WeaponContainerComponent [%s], but OwningCharacter was null"), *GetNameSafe(this));
+		return;
 	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Initialised WeaponContainerComponent, but OwningCharacter was null"));
-	}
+
+	SetupWeaponBindings();
 
 	for (TSubclassOf<AAWeaponBase> WeaponClass : DefaultWeapons)
 	{
@@ -67,11 +33,41 @@ void UAWeaponContainerComponent::BeginPlay()
 	EquipDefaultWeapon();
 }
 
+void UAWeaponContainerComponent::SetupWeaponBindings()
+{
+	if (!OwningCharacter)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Tried to set weapon bindings for [%s], but OwningCharacter was null"), *GetNameSafe(this));
+		return;
+	}
+
+	if (APlayerController* const PlayerController = Cast<APlayerController>(OwningCharacter->GetController()))
+	{
+		if (UEnhancedInputLocalPlayerSubsystem* const Subsystem
+			= ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
+		{
+			Subsystem->AddMappingContext(WeaponInputMappingContext, 0);
+		}
+
+		if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerController->InputComponent))
+		{
+			// Fire
+			EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Started, this, &UAWeaponContainerComponent::OnFireStart);
+			EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Completed, this, &UAWeaponContainerComponent::OnFireStop);
+
+			// Weapon Switching
+			EnhancedInputComponent->BindAction(EquipRocketAction, ETriggerEvent::Triggered, this, &UAWeaponContainerComponent::OnEquipRocketInput);
+			EnhancedInputComponent->BindAction(EquipLGAction, ETriggerEvent::Triggered, this, &UAWeaponContainerComponent::OnEquipLGInput);
+			EnhancedInputComponent->BindAction(EquipRailAction, ETriggerEvent::Triggered, this, &UAWeaponContainerComponent::OnEquipRailInput);
+		}
+	}
+}
+
 bool UAWeaponContainerComponent::InstantiateWeapon(TSubclassOf<AAWeaponBase> WeaponClass)
 {
 	if (!OwningCharacter)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Tried to add Weapon to WeaponComponent, but OwningCharacter was null"));
+		UE_LOG(LogTemp, Error, TEXT("Tried to instantiate weapon in WeaponContainerComponent [%s], but OwningCharacter was null"), *GetNameSafe(this));
 		return false;
 	}
 
@@ -85,19 +81,16 @@ bool UAWeaponContainerComponent::InstantiateWeapon(TSubclassOf<AAWeaponBase> Wea
 
 	if (!NewWeapon)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Tried to spawn NewWeapon, but it was null"));
+		UE_LOG(LogTemp, Error, TEXT("Tried to instantiate weapon, but it was null"));
 		return false;
 	}
 
 	// Check that NewWeapon's identifier is unique for this component
-	// TODO Look for a better way to do this (currently O(n), same as other operations on Weapons array)
-	for (AAWeaponBase* Weapon : Weapons)
+	if (GetWeapon(NewWeapon->GetIdentifier()))
 	{
-		if (Weapon && Weapon->GetIdentifier() == NewWeapon->GetIdentifier())
-		{
-			UE_LOG(LogTemp, Log, TEXT("Not adding new weapon as this component already has a weapon with matching identifier"));
-			return false;
-		}
+		UE_LOG(LogTemp, Warning, TEXT("Not adding weapon [%s] as this WeaponContainer already has a weapon with that identifier."), *(NewWeapon->GetIdentifier().GetTagName().ToString()));
+		//TODO Destroy NewWeapon?
+		return false;
 	}
 
 	NewWeapon->SetOwningPlayer(OwningCharacter);
@@ -142,6 +135,7 @@ void UAWeaponContainerComponent::ProcessSwapInput(FGameplayTag WeaponIdentifier)
 	}
 
 	// Ignore a swap to EquippedWeapon, unless a swap to another weapon had already started
+	// I.e., if a weapon is being unequipped, it is still possible to overwrite the WeaponToEquip
 	if (!bIsUnequippingWeapon)
 	{
 		if (EquippedWeapon && EquippedWeapon->GetIdentifier() == WeaponIdentifier)
@@ -164,13 +158,13 @@ void UAWeaponContainerComponent::ProcessSwapInput(FGameplayTag WeaponIdentifier)
 	// Don't start a swap as one is already in progress
 	if (bIsUnequippingWeapon)
 	{
-		UE_LOG(LogTemp, Log, TEXT("Not starting swap as already unequipping a weapon"));
+		UE_LOG(LogTemp, Log, TEXT("A weapon is already being unequipped. WeaponToSwapTo has been updated, but not starting new swap."));
 		return;
 	}	
 	
 	if (EquippedWeapon)
 	{
-		// Used to preserve firing if trigger held through weapon switch
+		// Used to preserve firing if trigger is held through weapon switch
 		bShouldFireOnSwapEnd = EquippedWeapon->IsFiring();
 		if (EquippedWeapon->IsFiring())
 		{
@@ -178,7 +172,7 @@ void UAWeaponContainerComponent::ProcessSwapInput(FGameplayTag WeaponIdentifier)
 		}
 			
 		// Don't start swapping until EquippedWeapon finishes reloading from its last fired shot
-		float PreSwapDelay = EquippedWeapon->GetRemainingFireDelay();
+		const float PreSwapDelay = EquippedWeapon->GetRemainingFireDelay();
 
 		if (PreSwapDelay == 0.f)
 		{
@@ -189,7 +183,7 @@ void UAWeaponContainerComponent::ProcessSwapInput(FGameplayTag WeaponIdentifier)
 			GetWorld()->GetTimerManager().SetTimer(TimerHandle_WeaponSwap, this, &UAWeaponContainerComponent::StartWeaponSwap, PreSwapDelay);
 		}		
 	}
-	else // Equipping first weapon
+	else // Equipping first weapon, ignore unequip
 	{
 		bIsEquippingWeapon = true;
 		GetWorld()->GetTimerManager().SetTimer(TimerHandle_WeaponSwap, this, &UAWeaponContainerComponent::OnWeaponEquipDelayEnd, WeaponEquipDelay);
@@ -219,11 +213,13 @@ void UAWeaponContainerComponent::OnWeaponUnequipDelayEnd()
 	if (!bIsUnequippingWeapon)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("OnWeaponUnequipDelayEnd() called, but bIsUnequippingWeapon was false"));
+		return;
 	}
 
 	if (bIsEquippingWeapon)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("OnWeaponUnequipDelayEnd() called, but bIsEquippingWeapon was true"));
+		return;
 	}
 
 	if (EquippedWeapon)
@@ -251,8 +247,6 @@ void UAWeaponContainerComponent::OnWeaponEquipDelayEnd()
 		return;
 	}
 
-	bIsEquippingWeapon = false;
-
 	WeaponToSwapTo->EquipWeapon();
 
 	EquippedWeapon = WeaponToSwapTo;
@@ -262,6 +256,8 @@ void UAWeaponContainerComponent::OnWeaponEquipDelayEnd()
 	{
 		EquippedWeapon->StartFire();
 	}
+
+	bIsEquippingWeapon = false;
 }
 
 void UAWeaponContainerComponent::EquipDefaultWeapon()
@@ -298,4 +294,17 @@ void UAWeaponContainerComponent::OnEquipLGInput()
 void UAWeaponContainerComponent::OnEquipRailInput()
 {
 	ProcessSwapInput(RailGameplayTag);
+}
+
+AAWeaponBase* UAWeaponContainerComponent::GetWeapon(FGameplayTag WeaponIdentifier) const
+{
+	for (AAWeaponBase* Weapon : Weapons)
+	{
+		if (Weapon && Weapon->GetIdentifier() == WeaponIdentifier)
+		{
+			return Weapon;
+		}
+	}
+
+	return nullptr;
 }
