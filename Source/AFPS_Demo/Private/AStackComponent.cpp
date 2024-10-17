@@ -181,7 +181,7 @@ void UAStackComponent::DecayOverHealth()
 
 	Health -= AmountToDecay;
 	
-	OnStackChanged.Broadcast(this, GetOwner(), Health, Health - OldHealth, Armour, 0);
+	OnStackChanged.Broadcast(this, GetOwner(), Health, (Health - OldHealth), Armour, 0);
 
 	// More health needs to be decayed
 	if (Health > BaseHealthMax)
@@ -209,7 +209,7 @@ void UAStackComponent::DecayOverArmour()
 
 	Armour -= AmountToDecay;
 
-	OnStackChanged.Broadcast(this, GetOwner(), Health, 0, Armour, Armour - OldArmour);
+	OnStackChanged.Broadcast(this, GetOwner(), Health, 0, Armour, (Armour - OldArmour));
 	
 	// More armour needs to be decayed
 	if (Armour > BaseArmourMax)
