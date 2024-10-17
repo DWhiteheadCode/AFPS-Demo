@@ -20,6 +20,31 @@ In AFPS games, there is typically no "wallbanging", where weapons can shoot thro
 
 To streamline these common use cases, I have created two trace channels: `Penetrating-HitScan` and `Non-penetrating-HitScan`. Both will `Block` by default (preventing wallbangs), however `Penetrating-HitScan` overlaps with `Pawns`, allowing for multiple enemies to be hit.
 
+## Weapon Swapping
+Each weapon has a dedicated keybind to swap to it. 
+
+When a weapon-swap-key is pressed (while a swap is not already in progress), two things can occur:
+- If the keybind is for the weapon that is currently equipped, the input will be ignored
+- If the keybind is for any other weapon (that the player has) a swap will start
+
+Swapping weapons occurs in two main stages:
+- Unequip the equipped weapon
+- Equip the new weapon
+
+### Unequipping the Old Weapon
+When a new swap starts, the equipped weapon must be unequipped. The amount of time this takes is defined by `AWeaponContainerComponent::WeaponUnequipDelay`. 
+
+If, at the time that the weapon-swap-key is pressed, the `EquippedWeapon` is firing, `StopFire()` will be called on that weapon. Before the unequip can start, you must first wait for the `EquippedWeapon`'s `FireDelay` to complete (if it was firing).
+
+During the unequip time, any weapon-swap-key inputs are valid (including to the weapon that is being unequipped). These inputs will simply update the `WeaponToSwapTo` that will begin equipping after the unequip delay.
+
+### Equipping the New Weapon
+Once the previous weapon was unequipped, the new weapon (indicated by the specific weapon-swap-key) can be equipped. The amount of time this takes is defined by `AWeaponContainerComponent::WeaponEquipDelay`. 
+
+While a weapon is being equipped, all weapon-swap-key inputs are ignored.
+
+If the player is holding the trigger when the equip ends, the new weapon will start immediately firing.
+
 ## Example Weapons
 ### Lightning Gun
 The lightning gun is a high-fire-rate, low-damage (per hit), non-penetrating hitscan weapon with a short-medium range. 
