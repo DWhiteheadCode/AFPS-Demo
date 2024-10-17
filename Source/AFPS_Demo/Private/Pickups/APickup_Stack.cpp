@@ -7,13 +7,13 @@ void AAPickup_Stack::OnBeginOverlap_Implementation(UPrimitiveComponent* Overlapp
 {
 	if (bIsOnCooldown)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Actor overlapped health pickup, but pickup was on cooldown"));
+		UE_LOG(LogTemp, Warning, TEXT("Actor overlapped stack pickup [%s], but pickup was on cooldown"), *GetNameSafe(this));
 		return;
 	}
 
 	if (!OtherActor)
 	{
-		UE_LOG(LogTemp, Error, TEXT("Nullptr actor overlapped with health pickup"));
+		UE_LOG(LogTemp, Error, TEXT("Nullptr actor overlapped with stack pickup [%s]"), *GetNameSafe(this));
 		return;
 	}
 
@@ -33,7 +33,7 @@ void AAPickup_Stack::OnBeginOverlap_Implementation(UPrimitiveComponent* Overlapp
 			else
 			{
 				bIsOnCooldown = true;
-				UpdatePickupState(); // Stop it being picked up by anyone else
+				UpdatePickupState();
 				SetLifeSpan(2.f);
 			}
 		}		
