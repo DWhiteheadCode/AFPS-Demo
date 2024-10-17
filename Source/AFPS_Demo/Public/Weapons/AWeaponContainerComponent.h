@@ -57,10 +57,10 @@ protected:
 
 	// WEAPON SWAPPING -------------------------------------------------------
 	UPROPERTY(EditAnywhere, Category = "Weapon Swapping")
-	float WeaponUnequipDelay = 0.4f;
+	float WeaponUnequipDelaySeconds = 0.4f;
 
 	UPROPERTY(EditAnywhere, Category = "Weapon Swapping")
-	float WeaponEquipDelay = 0.4f;
+	float WeaponEquipDelaySeconds = 0.4f;
 
 	UPROPERTY()
 	bool bShouldFireOnSwapEnd = false;
@@ -73,6 +73,9 @@ protected:
 
 	UFUNCTION()
 	void OnWeaponEquipDelayEnd();
+
+	UPROPERTY()
+	bool bIsWaitingToUnequipWeapon = false;
 
 	UPROPERTY()
 	bool bIsUnequippingWeapon = false;

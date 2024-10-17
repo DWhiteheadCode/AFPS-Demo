@@ -177,10 +177,7 @@ int AAWeaponBase::GetMaxAmmo() const
 
 float AAWeaponBase::GetRemainingFireDelay() const
 {
-	if (GetWorldTimerManager().IsTimerActive(TimerHandle_FireDelay))
-	{
-		return GetWorldTimerManager().GetTimerRemaining(TimerHandle_FireDelay);
-	}
+	const float RemainingDelay = GetWorldTimerManager().GetTimerRemaining(TimerHandle_FireDelay);
 
-	return 0.f;
+	return (RemainingDelay >= 0.f) ? RemainingDelay : 0.f;
 }
