@@ -10,13 +10,13 @@
 
 AAProjectile_Rocket::AAProjectile_Rocket()
 {
-	SphereComp = CreateDefaultSubobject<USphereComponent>("SphereComp");
-	SphereComp->SetSphereRadius(CollisionRadius);
-	SphereComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-	SphereComp->SetCollisionProfileName("Projectile");
-	SphereComp->SetGenerateOverlapEvents(true);
+	CollisionSphereComp = CreateDefaultSubobject<USphereComponent>("CollisionSphereComp");
+	CollisionSphereComp->SetSphereRadius(CollisionRadius);
+	CollisionSphereComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	CollisionSphereComp->SetCollisionProfileName("Projectile");
+	CollisionSphereComp->SetGenerateOverlapEvents(true);
 	
-	RootComponent = SphereComp;
+	RootComponent = CollisionSphereComp;
 
     MeshComp = CreateDefaultSubobject<UStaticMeshComponent>("MeshComp");
 	MeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -31,7 +31,7 @@ void AAProjectile_Rocket::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
 
-    SphereComp->OnComponentBeginOverlap.AddDynamic(this, &AAProjectile_Rocket::OnBeginOverlap);
+    CollisionSphereComp->OnComponentBeginOverlap.AddDynamic(this, &AAProjectile_Rocket::OnBeginOverlap);
 }
 
 void AAProjectile_Rocket::OnBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -50,7 +50,7 @@ void AAProjectile_Rocket::Detonate()
 	DrawDebugSphere(GetWorld(), GetActorLocation(), CloseFalloffRange, 16, FColor::White, false, 5.f, 0, 1.f);
 	DrawDebugSphere(GetWorld(), GetActorLocation(), FarFalloffRange, 16, FColor::White, false, 5.f, 0, 1.f);
 
-    TArray<AActor*> NearbyActors = GetNearbyActors();
+    TArray<AActor*> NearbyActors = GetActorsInExplosionRadius();
  
     for (AActor* Actor : NearbyActors)
     {
@@ -60,7 +60,8 @@ void AAProjectile_Rocket::Detonate()
 			continue;
 		}
 
-        if (UAStackComponent* StackComp = Cast<UAStackComponent>(Actor->GetComponentByClass(UAStackComponent::StaticClass())))
+		UAStackComponent* StackComp = Cast<UAStackComponent>(Actor->GetComponentByClass(UAStackComponent::StaticClass()));
+        if (StackComp)
         {
             const int Damage = CalculateDamage(Actor);
 
@@ -71,12 +72,13 @@ void AAProjectile_Rocket::Detonate()
         }
     }
 
+	// Destroy self
 	SetActorEnableCollision(false);
 	MeshComp->SetVisibility(false);
 	SetLifeSpan(2.f);
 }
 
-TArray<AActor*> AAProjectile_Rocket::GetNearbyActors() const
+TArray<AActor*> AAProjectile_Rocket::GetActorsInExplosionRadius() const
 {
     TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
     ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECC_Pawn));
@@ -109,8 +111,8 @@ int AAProjectile_Rocket::CalculateDamage(AActor* ActorToDamage) const
 		return 0;
 	}
 
-	// If this is considered valid in the future (i.e. more damage is dealt the further away the target 
-	// is from the rocket), then make sure (FarFalloffRange == CloseFalloffRange) is covered to prevent
+	// If, in the future, it's considered valid for more damage to be dealt the further away the target is 
+	// from the rocket, then make sure (FarFalloffRange == CloseFalloffRange) is covered to prevent
 	// a divide-by-zero in the Lerp function below.
 	if (FarFalloffRange <= CloseFalloffRange)
 	{
@@ -118,15 +120,16 @@ int AAProjectile_Rocket::CalculateDamage(AActor* ActorToDamage) const
 		return 0;
 	}
 
+	// Can't deal damage through walls
 	if (IsDamagePathBlocked(ActorToDamage))
 	{
 		return 0; 
 	}
 
 	// This is not ideal as the actual distance we want is the closest distance between the rocket
-	// and any point on ActorToDamage's hitbox that has LOS to the rocket
+	// and any point on ActorToDamage's hitbox that has LOS to the rocket.
 	//
-	// TODO - Leaving it like this for now, but will look for a solution later.
+	// TODO - Leaving it like this for now, but will look for a better solution later.
 	const float Distance = FVector::Distance(GetActorLocation(), ActorToDamage->GetActorLocation());
 
 	if (Distance > FarFalloffRange)
@@ -137,7 +140,6 @@ int AAProjectile_Rocket::CalculateDamage(AActor* ActorToDamage) const
 		return 0;
 	}
 
-	// Deal MaxDamage at all distances within CloseFalloffRange
 	if (Distance <= CloseFalloffRange)
 	{
 		return MaxDamage;
@@ -147,16 +149,16 @@ int AAProjectile_Rocket::CalculateDamage(AActor* ActorToDamage) const
 	// Note: The case where the denominator == 0 is covered by the above guard conditions.
 	const int Damage = FMath::Lerp(MaxDamage, MinDamage, ((Distance - CloseFalloffRange) / (FarFalloffRange - CloseFalloffRange)));
 
-	UE_LOG(LogTemp, Log, TEXT("Distance to rocket: %f"), Distance);
-	UE_LOG(LogTemp, Log, TEXT("Damage from rocket: %i"), Damage);
+	//UE_LOG(LogTemp, Log, TEXT("Distance to rocket: %f"), Distance);
+	//UE_LOG(LogTemp, Log, TEXT("Damage from rocket: %i"), Damage);
 
 	return Damage;
 }
 
-// This approach is not ideal as damage will be blocked if the GetActorLocation of ActorToDamage
+// This approach is not ideal as damage will be blocked if the GetActorLocation() of ActorToDamage
 // is blocked, regardless of if there is valid LOS to another part of the Actor.
 //
-// TODO - Work on better solution
+// TODO - Leaving it like this for now, but will look for a better solution later.
 bool AAProjectile_Rocket::IsDamagePathBlocked(AActor* ActorToDamage) const
 {
 	if (!ActorToDamage)
@@ -175,5 +177,5 @@ bool AAProjectile_Rocket::IsDamagePathBlocked(AActor* ActorToDamage) const
 
 	FHitResult HitResult;
 
-	return GetWorld()->LineTraceSingleByChannel(HitResult, StartLocation, EndLocation, TraceChannel, Params);
+	return GetWorld()->LineTraceSingleByChannel(HitResult, StartLocation, EndLocation, SplashDamageTraceChannel, Params);
 }

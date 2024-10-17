@@ -23,7 +23,7 @@ protected:
 	TObjectPtr<UStaticMeshComponent> MeshComp;
 
 	UPROPERTY(VisibleAnywhere, Category = "Components")
-	TObjectPtr<USphereComponent> SphereComp;
+	TObjectPtr<USphereComponent> CollisionSphereComp;
 
 	// COLLISION ----------------------------------------------------
 	UPROPERTY(EditAnywhere, Category = "Collision")
@@ -37,6 +37,12 @@ protected:
 	UPROPERTY(EditAnywhere, Category="Cooldown")
 	bool bRespawns = true;
 
+	UPROPERTY(EditAnywhere, Category = "Cooldown")
+	float CooldownDuration = 30.f;
+
+	UPROPERTY(BlueprintReadOnly)
+	bool bIsOnCooldown = false;
+
 	UFUNCTION()
 	void StartCooldown();
 
@@ -45,12 +51,6 @@ protected:
 
 	UFUNCTION()
 	void UpdatePickupState();
-
-	UPROPERTY(BlueprintReadOnly)
-	bool bIsOnCooldown = false;
-
-	UPROPERTY(EditAnywhere, Category="Cooldown")
-	float CooldownDuration = 30.f;
 
 	FTimerHandle TimerHandle_Cooldown;
 };

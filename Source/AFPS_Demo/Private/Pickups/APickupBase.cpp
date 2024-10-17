@@ -5,10 +5,11 @@
 
 AAPickupBase::AAPickupBase()
 {
-	SphereComp = CreateDefaultSubobject<USphereComponent>("SphereComp");
-	SphereComp->SetSphereRadius(CollisionRadius);
-	SphereComp->SetCollisionProfileName("Pickup");
-	RootComponent = SphereComp;
+	CollisionSphereComp = CreateDefaultSubobject<USphereComponent>("CollisionSphereComp");
+	CollisionSphereComp->SetSphereRadius(CollisionRadius);
+	CollisionSphereComp->SetCollisionProfileName("Pickup");
+
+	RootComponent = CollisionSphereComp;
 
 	MeshComp = CreateDefaultSubobject<UStaticMeshComponent>("MeshComp");
 	MeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -18,14 +19,20 @@ AAPickupBase::AAPickupBase()
 void AAPickupBase::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
-	SphereComp->OnComponentBeginOverlap.AddDynamic(this, &AAPickupBase::OnBeginOverlap);
+	CollisionSphereComp->OnComponentBeginOverlap.AddDynamic(this, &AAPickupBase::OnBeginOverlap);
 }
 
 void AAPickupBase::StartCooldown()
 {
+	if (!bRespawns)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Tried to start cooldown for pickup [%s], but bRespawns is false."), *GetNameSafe(this));
+		return;
+	}
+
 	if (bIsOnCooldown)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Tried to start pickup cooldown, but it was already on cooldown."));
+		UE_LOG(LogTemp, Warning, TEXT("Tried to start pickup [%s] cooldown, but it was already on cooldown."), *GetNameSafe(this));
 		return;
 	}
 
@@ -38,7 +45,7 @@ void AAPickupBase::OnCooldownEnd()
 {
 	if (!bIsOnCooldown)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Tried to end pickup cooldown, but it wasn't on cooldown."));
+		UE_LOG(LogTemp, Warning, TEXT("Tried to end pickup [%s] cooldown, but it wasn't on cooldown."), *GetNameSafe(this));
 		return;
 	}
 

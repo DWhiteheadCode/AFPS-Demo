@@ -5,15 +5,17 @@
 void AAPickup_Stack::OnBeginOverlap_Implementation(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+	UE_LOG(LogTemp, Log, TEXT("Stack pickup overlap"));
+
 	if (bIsOnCooldown)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Actor overlapped health pickup, but pickup was on cooldown"));
+		UE_LOG(LogTemp, Warning, TEXT("Actor overlapped stack pickup [%s], but pickup was on cooldown"), *GetNameSafe(this));
 		return;
 	}
 
 	if (!OtherActor)
 	{
-		UE_LOG(LogTemp, Error, TEXT("Nullptr actor overlapped with health pickup"));
+		UE_LOG(LogTemp, Error, TEXT("Nullptr actor overlapped with stack pickup [%s]"), *GetNameSafe(this));
 		return;
 	}
 
@@ -28,12 +30,14 @@ void AAPickup_Stack::OnBeginOverlap_Implementation(UPrimitiveComponent* Overlapp
 		{
 			if (bRespawns)
 			{
+				UE_LOG(LogTemp, Log, TEXT("Starting stack pickup cooldown"));
 				StartCooldown();
 			}
 			else
 			{
+				UE_LOG(LogTemp, Log, TEXT("Consuming stack pickup"));
 				bIsOnCooldown = true;
-				UpdatePickupState(); // Stop it being picked up by anyone else
+				UpdatePickupState();
 				SetLifeSpan(2.f);
 			}
 		}		

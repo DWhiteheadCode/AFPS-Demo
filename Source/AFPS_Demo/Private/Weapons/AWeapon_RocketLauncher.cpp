@@ -14,13 +14,13 @@ void AAWeapon_RocketLauncher::Fire_Implementation()
 {
 	if (!CanFire())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Tried to fire rocket, but CanFire() returned false"));
+		UE_LOG(LogTemp, Warning, TEXT("Tried to fire [%s], but CanFire() returned false"), *GetNameSafe(this));
 		return;
 	}
 
 	if (!OwningPlayer)
 	{
-		UE_LOG(LogTemp, Error, TEXT("Tried to fire Rocket, but OwningPlayer was null"));
+		UE_LOG(LogTemp, Error, TEXT("Tried to fire [%s], but OwningPlayer was null"), *GetNameSafe(this));
 		return;
 	}
 

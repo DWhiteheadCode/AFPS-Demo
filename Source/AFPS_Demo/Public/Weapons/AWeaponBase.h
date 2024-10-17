@@ -28,12 +28,23 @@ public:
 	UFUNCTION()
 	bool SetOwningPlayer(AAPlayerCharacter* InOwner);
 
+	UFUNCTION(BlueprintCallable)
+	FGameplayTag GetIdentifier() const;
+
+	// EQUIP / UNEQUIP --------------------------------------------------------
 	UFUNCTION()
 	void EquipWeapon();	
 
 	UFUNCTION()
 	void UnequipWeapon();
 
+	UFUNCTION(BlueprintCallable)
+	bool IsEquipped() const;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnEquipStateChanged OnEquipStateChanged;
+
+	// FIRING ------------------------------------------------------------------
 	// Called when the user starts firing ("holding the trigger down")
 	UFUNCTION()
 	void StartFire(); 
@@ -42,7 +53,7 @@ public:
 	UFUNCTION()
 	void StopFire();
 
-	// Called when the weapoon actually fires (i.e. each time a bullet/projectile is shot)
+	// Called when the weapon actually fires (i.e. each time a bullet/projectile is shot)
 	UFUNCTION(BlueprintNativeEvent)
 	void Fire();
 
@@ -52,42 +63,33 @@ public:
 	UFUNCTION(BlueprintCallable)
 	bool IsFiring() const;
 
-	UFUNCTION(BlueprintCallable)
-	bool IsEquipped () const;
+	UFUNCTION()
+	float GetRemainingFireDelay() const;
 
-	UFUNCTION(BlueprintCallable)
-	FGameplayTag GetIdentifier() const;
-
-	UPROPERTY(BlueprintAssignable)
-	FOnEquipStateChanged OnEquipStateChanged;
-
-	UPROPERTY(BlueprintAssignable)
-	FOnAmmoChanged OnAmmoChanged;
-
+	// AMMO -----------------------------------------------------------------------
 	UFUNCTION(BlueprintCallable)
 	int GetAmmo() const;
 
 	UFUNCTION(BlueprintCallable)
 	int GetMaxAmmo() const;
 
-	UFUNCTION()
-	float GetRemainingFireDelay() const;
+	UPROPERTY(BlueprintAssignable)
+	FOnAmmoChanged OnAmmoChanged;
 
 protected:
-	UFUNCTION()
-	void OnFireDelayEnd();
-	
-	// COMPONENTS -----------------------
+	// COMPONENTS -----------------------------------------------------------------
 	UPROPERTY(EditDefaultsOnly, Category="Components")
 	TObjectPtr<UStaticMeshComponent> MeshComp;
 
-	// PROPERTIES -----------------------
+	// IDENTIFIER -----------------------------------------------------------------
 	UPROPERTY(EditDefaultsOnly, Category="Weapon")
 	FGameplayTag Identifier;
 
+	// OWNER ----------------------------------------------------------------------
 	UPROPERTY()
 	TObjectPtr<AAPlayerCharacter> OwningPlayer;
 
+	// AMMO -----------------------------------------------------------------------
 	UPROPERTY(EditAnywhere, Category = "Ammo")
 	int MaxAmmo = 15;
 
@@ -97,6 +99,7 @@ protected:
 	UPROPERTY()
 	int Ammo;
 
+	// FIRING ---------------------------------------------------------------------
 	UPROPERTY(EditAnywhere, Category = "Weapon")
 	float FireDelay = 1.f;
 
@@ -108,7 +111,10 @@ protected:
 	UPROPERTY()
 	bool bIsFiring = false;
 
+	UFUNCTION()
+	void OnFireDelayEnd();
 
+	// EQUIPPED -------------------------------------------------------------------
 	UPROPERTY()
 	bool bIsEquipped = false;
 };

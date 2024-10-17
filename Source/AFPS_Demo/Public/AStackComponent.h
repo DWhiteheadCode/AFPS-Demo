@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -26,7 +24,8 @@ public:
 	UAStackComponent();
 
 	void BeginPlay() override;
-
+	
+	// STACK MUTATORS ----------------------------------------------------------------------
 	UFUNCTION(BlueprintCallable)
 	bool ApplyDamage(int Amount, AActor* InstigatorActor);
 
@@ -39,6 +38,7 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnStackChanged OnStackChanged;
 
+	// STACK ACCESSORS ---------------------------------------------------------------------
 	UFUNCTION(BlueprintCallable)
 	int GetHealth() const;
 
@@ -47,11 +47,11 @@ public:
 
 
 protected:
-	// GENERAL ------------------------
+	// GENERAL ------------------------------------------------------------------------------
 	UPROPERTY(EditAnywhere, Category = "Stack")
 	float SelfDamageMultiplier = 0.67f;
 
-	// HEALTH -------------------------
+	// HEALTH -------------------------------------------------------------------------------
 	UPROPERTY()
 	int Health = 125;
 
@@ -65,10 +65,13 @@ protected:
 	int OverHealthMax = 175; // Max health, including base-health and overhealth
 
 	UPROPERTY(EditAnywhere, Category = "Health")
-	float OverHealthDecayInterval = 1.f; // Time (seconds) between over-health decay ticks. 
+	float OverHealthDecayIntervalSeconds = 1.f; // Time between over-health decay ticks. 
 
 	UPROPERTY(EditAnywhere, Category = "Health")
-	int OverHealthDecayAmount = 2; // Amount of health to decay every OverHealthDecayTime seconds
+	int OverHealthDecayAmount = 2; // Amount of OverHealth to decay every OverHealthDecayIntervalSeconds
+
+	UFUNCTION()
+	bool CanDecayOverHealth() const;
 
 	UFUNCTION()
 	void DecayOverHealth();
@@ -93,10 +96,13 @@ protected:
 	int OverArmourMax = 175; // Max armour, including base-armour and overarmour
 
 	UPROPERTY(EditAnywhere, Category = "Armour")
-	float OverArmourDecayInterval = 1.f; // Time (seconds) between over-Armour decay ticks. 
+	float OverArmourDecayIntervalSeconds = 1.f; // Time between over-Armour decay ticks. 
 
 	UPROPERTY(EditAnywhere, Category = "Armour")
-	int OverArmourDecayAmount = 2; // Amount of Armour to decay every OverArmourDecayTime seconds
+	int OverArmourDecayAmount = 2; // Amount of OverArmour to decay every OverArmourDecayIntervalSeconds
+
+	UFUNCTION()
+	bool CanDecayOverArmour() const;
 
 	UFUNCTION()
 	void DecayOverArmour();

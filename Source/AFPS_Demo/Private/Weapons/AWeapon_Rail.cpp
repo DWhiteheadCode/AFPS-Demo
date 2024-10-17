@@ -14,7 +14,7 @@ void AAWeapon_Rail::Fire_Implementation()
 {
 	if (!CanFire()) // Weapon can't fire (typically out of ammo)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Tried to fire Rail, but CanFire() returned false"));
+		UE_LOG(LogTemp, Warning, TEXT("Tried to fire [%s], but CanFire() returned false"), *GetNameSafe(this));
 		return;
 	}
 
@@ -35,7 +35,7 @@ TArray<UAStackComponent*> AAWeapon_Rail::GetComponentsToDamage() const
 {
 	if (!OwningPlayer)
 	{
-		UE_LOG(LogTemp, Error, TEXT("Tried to GetComponentsToDamage, but didn't have OwningPlayer"));
+		UE_LOG(LogTemp, Error, TEXT("[%s] tried to GetComponentsToDamage(), but OwningPlayer was null"), *GetNameSafe(this));
 		return TArray<UAStackComponent*>();
 	}
 

@@ -8,7 +8,7 @@
 AAWeaponBase::AAWeaponBase()
 {
 	MeshComp = CreateDefaultSubobject<UStaticMeshComponent>("MeshComp");
-	MeshComp->SetVisibility(false, true);
+	MeshComp->SetVisibility(false, true); // Invisible while not equipped
 	MeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	RootComponent = MeshComp;
@@ -30,14 +30,19 @@ bool AAWeaponBase::SetOwningPlayer(AAPlayerCharacter* InOwner)
 {
 	if (!InOwner)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Can't set weapon owner to null"));
+		UE_LOG(LogTemp, Error, TEXT("Tried to set weapon [%s] owner to null"), *GetNameSafe(this));
 		return false;
 	}
 
 	OwningPlayer = InOwner;
-	AttachToComponent(OwningPlayer->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("hand_r"));
+	
+	if (AttachToComponent( OwningPlayer->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("hand_r")) )
+	{
+		return true;
+	}
 
-	return true;
+	UE_LOG(LogTemp, Error, TEXT("Failed to attach weapon [%s] to owner [%s]"), *GetNameSafe(this), *GetNameSafe(OwningPlayer));
+	return false;
 }
 
 void AAWeaponBase::EquipWeapon()
@@ -78,7 +83,7 @@ void AAWeaponBase::StartFire()
 {
 	if (bIsFiring)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Tried to start weapon firing while already firing"));
+		UE_LOG(LogTemp, Warning, TEXT("Tried to start weapon [%s] firing while already firing"), *GetNameSafe(this));
 		return;
 	}
 
@@ -105,7 +110,7 @@ void AAWeaponBase::StopFire()
 {
 	if (!bIsFiring)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Tried to stop weapon firing while not already firing"));
+		UE_LOG(LogTemp, Warning, TEXT("Tried to stop weapon [%s] firing while not already firing"), *GetNameSafe(this));
 		return;
 	}
 
@@ -123,9 +128,21 @@ void AAWeaponBase::Fire_Implementation()
 	
 	Ammo--;
 	LastFireTime = GetWorld()->GetTimeSeconds();
-	UE_LOG(LogTemp, Log, TEXT("Fired [%s] - Remaining Ammo: [%d]"), *GetNameSafe(this), Ammo);
+
+	//UE_LOG(LogTemp, Log, TEXT("Fired [%s] - Remaining Ammo: [%d]"), *GetNameSafe(this), Ammo);
 
 	OnAmmoChanged.Broadcast(this, Ammo, Ammo + 1, MaxAmmo);
+}
+
+void AAWeaponBase::OnFireDelayEnd()
+{
+	// Setting this (even if the weapon can't fire) means it can't attempt to fire again too soon
+	LastFireTime = GetWorld()->GetTimeSeconds();
+
+	if (CanFire())
+	{
+		Fire();
+	}
 }
 
 bool AAWeaponBase::CanFire() const
@@ -166,15 +183,4 @@ float AAWeaponBase::GetRemainingFireDelay() const
 	}
 
 	return 0.f;
-}
-
-void AAWeaponBase::OnFireDelayEnd()
-{
-	// Setting this (even if the weapon can't fire) means it can't attempt to fire again too soon
-	LastFireTime = GetWorld()->GetTimeSeconds();
-
-	if (CanFire())
-	{
-		Fire();
-	}
 }

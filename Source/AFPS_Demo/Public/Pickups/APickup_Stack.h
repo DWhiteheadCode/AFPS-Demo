@@ -13,18 +13,21 @@ class AFPS_DEMO_API AAPickup_Stack : public AAPickupBase
 	GENERATED_BODY()
 	
 protected:
+	// COLLISION ----------------------------------------------------------
 	void OnBeginOverlap_Implementation(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) override;
 
-	UPROPERTY(EditAnywhere, Category="Health")
+	// HEALTH -------------------------------------------------------------
+	UPROPERTY(EditAnywhere, Category="Stack")
 	int HealthAmount = 25;
 
-	UPROPERTY(EditAnywhere, Category = "Health")
+	UPROPERTY(EditAnywhere, Category = "Stack")
 	bool bCanOverhealHealth = false;
 
-	UPROPERTY(EditAnywhere, Category = "Health")
+	// ARMOUR --------------------------------------------------------------
+	UPROPERTY(EditAnywhere, Category = "Stack")
 	int ArmourAmount = 0;
 
-	UPROPERTY(EditAnywhere, Category = "Health")
+	UPROPERTY(EditAnywhere, Category = "Stack")
 	bool bCanOverhealArmour = false;
 };

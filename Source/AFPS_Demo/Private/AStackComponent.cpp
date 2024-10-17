@@ -17,26 +17,26 @@ void UAStackComponent::BeginPlay()
 
 	if (BaseHealthMax > OverHealthMax)
 	{
-		UE_LOG(LogTemp, Error, TEXT("BaseHealthMax must be <= OverHealthMax."));
+		UE_LOG(LogTemp, Error, TEXT("BaseHealthMax must be <= OverHealthMax (OverHealthMax is the total max health, including BaseHealth and OverHealth)."));
 		return;
 	}
 
 	if (BaseArmourMax > OverArmourMax)
 	{
-		UE_LOG(LogTemp, Error, TEXT("BaseArmourMax must be <= OverArmourMax."));
+		UE_LOG(LogTemp, Error, TEXT("BaseArmourMax must be <= OverArmourMax (OverArmourMax is the total max armour, including BaseArmour and OverArmour)."));
 		return;
+	}	
+
+	// Started with over-health, so start decay timer
+	if (Health > BaseHealthMax && CanDecayOverHealth())
+	{
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle_OverHealthDecay, this, &UAStackComponent::DecayOverHealth, OverHealthDecayIntervalSeconds);
 	}
 
-	// Started with overhealth, so start decay timer
-	if (Health > BaseHealthMax && OverHealthDecayInterval > 0.f)
+	// Started with over-armour, so start decay timer
+	if (Armour > BaseArmourMax && CanDecayOverArmour())
 	{
-		GetWorld()->GetTimerManager().SetTimer(TimerHandle_OverHealthDecay, this, &UAStackComponent::DecayOverHealth, OverHealthDecayInterval);
-	}
-
-	// Started with overarmour, so start decay timer
-	if (Armour > BaseArmourMax && OverArmourDecayInterval > 0.f)
-	{
-		GetWorld()->GetTimerManager().SetTimer(TimerHandle_OverArmourDecay, this, &UAStackComponent::DecayOverArmour, OverArmourDecayInterval);
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle_OverArmourDecay, this, &UAStackComponent::DecayOverArmour, OverArmourDecayIntervalSeconds);
 	}
 }
 
@@ -50,13 +50,13 @@ bool UAStackComponent::ApplyDamage(int Amount, AActor* InstigatorActor)
 
 	if (BaseHealthMax > OverHealthMax)
 	{
-		UE_LOG(LogTemp, Error, TEXT("BaseHealthMax [%d] can't exceed OverHealthMax [%d]."), BaseHealthMax, OverHealthMax);
+		UE_LOG(LogTemp, Error, TEXT("Tried to apply damage, but BaseHealthMax [%d] exceeded OverHealthMax [%d]."), BaseHealthMax, OverHealthMax);
 		return false;
 	}
 
 	if (BaseArmourMax > OverArmourMax)
 	{
-		UE_LOG(LogTemp, Error, TEXT("BaseArmourMax [%d] can't exceed OverArmourMax [%d]."), BaseArmourMax, OverArmourMax);
+		UE_LOG(LogTemp, Error, TEXT("Tried to apply damage, but BaseArmourMax [%d] exceeded OverArmourMax [%d]."), BaseArmourMax, OverArmourMax);
 		return false;
 	}
 
@@ -66,21 +66,17 @@ bool UAStackComponent::ApplyDamage(int Amount, AActor* InstigatorActor)
 		Amount *= SelfDamageMultiplier;
 	}
 
+	const int OldHealth = Health;
+	const int OldArmour = Armour;
 
 	// Do as much damage to Armour as possible, then apply remaining damage to Health
 	const int ArmourPortion = FMath::Min(Armour, Amount * ArmourEfficiency); 
 	const int HealthPortion = Amount - ArmourPortion;
 
-	const int OldHealth = Health;
-	const int OldArmour = Armour;
-
 	Health = FMath::Max( (Health - HealthPortion), 0 );
 	Armour = FMath::Max( (Armour - ArmourPortion), 0 );
 
-	const int ActualHealthDelta = Health - OldHealth;
-	const int ActualArmourDelta = Armour - OldArmour;
-
-	OnStackChanged.Broadcast(this, InstigatorActor, Health, ActualHealthDelta, Armour, ActualArmourDelta);
+	OnStackChanged.Broadcast( this, InstigatorActor, Health, (Health - OldHealth), Armour, (Armour - OldArmour) );
 
 	if (Health == 0)
 	{
@@ -100,7 +96,7 @@ bool UAStackComponent::AddHealth(const int Amount, const bool bCanOverHeal, AAct
 
 	if (Amount == 0)
 	{
-		UE_LOG(LogTemp, Log, TEXT("Skipping AddHealth with Amount == 0"));
+		//UE_LOG(LogTemp, Log, TEXT("Skipping AddHealth with Amount == 0"));
 		return false;
 	}
 
@@ -120,9 +116,9 @@ bool UAStackComponent::AddHealth(const int Amount, const bool bCanOverHeal, AAct
 	OnStackChanged.Broadcast(this, InstigatorActor, Health, ActualHealthDelta, Armour, 0);
 
 	// This healed overhealth, so set/reset decay timer
-	if (bCanOverHeal && Health > BaseHealthMax && OverHealthDecayInterval > 0.f)
+	if (bCanOverHeal && Health > BaseHealthMax && CanDecayOverHealth())
 	{
-		GetWorld()->GetTimerManager().SetTimer(TimerHandle_OverHealthDecay, this, &UAStackComponent::DecayOverHealth, OverHealthDecayInterval);
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle_OverHealthDecay, this, &UAStackComponent::DecayOverHealth, OverHealthDecayIntervalSeconds);
 	}
 
     return true;
@@ -138,7 +134,7 @@ bool UAStackComponent::AddArmour(const int Amount, const bool bCanOverHeal, AAct
 
 	if (Amount == 0)
 	{
-		UE_LOG(LogTemp, Log, TEXT("Skipping AddArmour with Amount == 0"));
+		//UE_LOG(LogTemp, Log, TEXT("Skipping AddArmour with Amount == 0"));
 		return false;
 	}
 
@@ -158,29 +154,19 @@ bool UAStackComponent::AddArmour(const int Amount, const bool bCanOverHeal, AAct
 	OnStackChanged.Broadcast(this, InstigatorActor, Health, 0, Armour, ActualArmourDelta);
 
 	// This healed overarmour, so set/reset decay timer
-	if (bCanOverHeal && Armour > BaseArmourMax && OverArmourDecayInterval > 0.f)
+	if (bCanOverHeal && Armour > BaseArmourMax && CanDecayOverArmour())
 	{
-		GetWorld()->GetTimerManager().SetTimer(TimerHandle_OverArmourDecay, this, &UAStackComponent::DecayOverArmour, OverArmourDecayInterval);
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle_OverArmourDecay, this, &UAStackComponent::DecayOverArmour, OverArmourDecayIntervalSeconds);
 	}
 
 	return true;
 }
 
-int UAStackComponent::GetHealth() const
-{
-	return Health;
-}
-
-int UAStackComponent::GetArmour() const
-{
-	return Armour;
-}
-
 void UAStackComponent::DecayOverHealth()
 {
-	if (OverHealthDecayAmount <= 0)
+	if (!CanDecayOverHealth())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("OverHealthDecayAmount is non-positive [%d]. Ignoring decay."), OverHealthDecayAmount);
+		UE_LOG(LogTemp, Warning, TEXT("Tried to decay Health, but CanDecayOverHealth() was false."));
 		return;
 	}
 
@@ -195,26 +181,20 @@ void UAStackComponent::DecayOverHealth()
 
 	Health -= AmountToDecay;
 	
-	OnStackChanged.Broadcast(this, GetOwner(), Health, Health - OldHealth, Armour, 0);
-
-	if (OverHealthDecayInterval <= 0.f)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("OverHealthDecayInterval is non-positive [%f]. Not setting decay timer."), OverHealthDecayInterval);
-		return;
-	}
+	OnStackChanged.Broadcast(this, GetOwner(), Health, (Health - OldHealth), Armour, 0);
 
 	// More health needs to be decayed
 	if (Health > BaseHealthMax)
 	{
-		GetWorld()->GetTimerManager().SetTimer(TimerHandle_OverHealthDecay, this, &UAStackComponent::DecayOverHealth, OverHealthDecayInterval);
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle_OverHealthDecay, this, &UAStackComponent::DecayOverHealth, OverHealthDecayIntervalSeconds);
 	}
 }
 
 void UAStackComponent::DecayOverArmour()
 {
-	if (OverArmourDecayAmount <= 0)
+	if (!CanDecayOverArmour())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("OverArmourDecayAmount is non-positive [%d]. Ignoring decay."), OverArmourDecayAmount);
+		UE_LOG(LogTemp, Warning, TEXT("Tried to decay Armour, but CanDecayOverArmour() was false."));
 		return;
 	}
 
@@ -229,17 +209,31 @@ void UAStackComponent::DecayOverArmour()
 
 	Armour -= AmountToDecay;
 
-	OnStackChanged.Broadcast(this, GetOwner(), Health, 0, Armour, Armour - OldArmour);
-
-	if (OverArmourDecayInterval <= 0.f)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("OverArmourDecayInterval is non-positive [%f]. Not setting decay timer."), OverArmourDecayInterval);
-		return;
-	}
-
+	OnStackChanged.Broadcast(this, GetOwner(), Health, 0, Armour, (Armour - OldArmour));
+	
 	// More armour needs to be decayed
 	if (Armour > BaseArmourMax)
 	{
-		GetWorld()->GetTimerManager().SetTimer(TimerHandle_OverArmourDecay, this, &UAStackComponent::DecayOverArmour, OverArmourDecayInterval);
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle_OverArmourDecay, this, &UAStackComponent::DecayOverArmour, OverArmourDecayIntervalSeconds);
 	}
+}
+
+int UAStackComponent::GetHealth() const
+{
+	return Health;
+}
+
+int UAStackComponent::GetArmour() const
+{
+	return Armour;
+}
+
+bool UAStackComponent::CanDecayOverHealth() const
+{
+	return OverHealthDecayAmount > 0 && OverHealthDecayIntervalSeconds > 0;
+}
+
+bool UAStackComponent::CanDecayOverArmour() const
+{
+	return OverArmourDecayAmount > 0 && OverArmourDecayIntervalSeconds > 0;
 }

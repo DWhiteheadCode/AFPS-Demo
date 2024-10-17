@@ -35,14 +35,16 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+	// OWNER -----------------------------------------------------------------
+	UPROPERTY()
+	TObjectPtr<AAPlayerCharacter> OwningCharacter;
+
+	// WEAPONS ---------------------------------------------------------------
 	UPROPERTY(EditDefaultsOnly, Category = "Weapons")
 	TArray<TSubclassOf<AAWeaponBase>> DefaultWeapons;
 		
 	UPROPERTY()
 	TArray<TObjectPtr<AAWeaponBase>> Weapons;
-
-	UPROPERTY()
-	TObjectPtr<AAPlayerCharacter> OwningCharacter;
 
 	UPROPERTY()
 	TObjectPtr<AAWeaponBase> EquippedWeapon;
@@ -53,7 +55,7 @@ protected:
 	UFUNCTION()
 	AAWeaponBase* GetWeapon(FGameplayTag WeaponIdentifier) const;
 
-	// WEAPON SWAPPING -------------------------------------------
+	// WEAPON SWAPPING -------------------------------------------------------
 	UPROPERTY(EditAnywhere, Category = "Weapon Swapping")
 	float WeaponUnequipDelay = 0.4f;
 
@@ -62,9 +64,6 @@ protected:
 
 	UPROPERTY()
 	bool bShouldFireOnSwapEnd = false;
-
-	UFUNCTION()
-	void ProcessSwapInput(FGameplayTag WeaponIdentifier);
 
 	UFUNCTION()
 	void StartWeaponSwap();
@@ -82,16 +81,19 @@ protected:
 	bool bIsEquippingWeapon = false;
 
 	UPROPERTY()
-	AAWeaponBase* WeaponToSwapTo = nullptr;
+	TObjectPtr<AAWeaponBase> WeaponToSwapTo = nullptr;
 
 	FTimerHandle TimerHandle_WeaponSwap;
 
 	// INPUT ----------------------------------------------------
-	// IMC
+	// IMC ----
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	TObjectPtr<UInputMappingContext> WeaponInputMappingContext;
 
-	// Fire Action
+	UFUNCTION()
+	void SetupWeaponBindings();
+
+	// Fire Action ----
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	TObjectPtr<UInputAction> FireAction;
 
@@ -101,7 +103,11 @@ protected:
 	UFUNCTION()
 	void OnFireStop();
 	
-	// Equip Rocket
+	// Generic Weapon Swap ----
+	UFUNCTION()
+	void ProcessSwapInput(FGameplayTag WeaponIdentifier);
+
+	// Equip Rocket ----
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	TObjectPtr<UInputAction> EquipRocketAction;
 
@@ -111,7 +117,7 @@ protected:
 	UFUNCTION()
 	void OnEquipRocketInput();
 
-	// Equip LG
+	// Equip LG ----
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	TObjectPtr<UInputAction> EquipLGAction;
 
@@ -121,7 +127,7 @@ protected:
 	UFUNCTION()
 	void OnEquipLGInput();
 
-	// Equip Rail
+	// Equip Rail ----
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	TObjectPtr<UInputAction> EquipRailAction;
 
