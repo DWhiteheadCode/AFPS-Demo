@@ -60,12 +60,12 @@ protected:
 	float FarFalloffRange = 100.f; // Range where MinDamage will be dealt. Also max range to deal any damage.
 
 	UFUNCTION()
-	int CalculateDamage(AActor* ActorToDamage) const;
+	int CalculateDamage(const AActor* ActorToDamage) const;
 
 	// HELPER FUNCTIONS ------------------------------------------------------
 	UFUNCTION()
 	TArray<AActor*> GetActorsInExplosionRadius() const; 
 
 	UFUNCTION()
-	bool IsDamagePathBlocked(AActor* ActorToDamage) const;
+	bool IsDamagePathBlocked(const AActor* ActorToDamage) const;
 };

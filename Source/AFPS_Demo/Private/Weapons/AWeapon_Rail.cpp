@@ -20,7 +20,7 @@ void AAWeapon_Rail::Fire_Implementation()
 
 	Super::Fire_Implementation();
 
-	TArray<UAStackComponent*> HitStackComponents = GetComponentsToDamage();
+	const TArray<UAStackComponent*> HitStackComponents = GetComponentsToDamage();
 
 	for (UAStackComponent* StackComp : HitStackComponents)
 	{
@@ -39,10 +39,10 @@ TArray<UAStackComponent*> AAWeapon_Rail::GetComponentsToDamage() const
 		return TArray<UAStackComponent*>();
 	}
 
-	FVector StartPos = OwningPlayer->GetPawnViewLocation();
-	FRotator FiringDirection = OwningPlayer->GetControlRotation();
+	const FVector StartPos = OwningPlayer->GetPawnViewLocation();
+	const FRotator FiringDirection = OwningPlayer->GetControlRotation();
 
-	FVector EndPos = StartPos + (FiringDirection.Vector() * Range);
+	const FVector EndPos = StartPos + (FiringDirection.Vector() * Range);
 
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActor(OwningPlayer);
@@ -53,11 +53,11 @@ TArray<UAStackComponent*> AAWeapon_Rail::GetComponentsToDamage() const
 
 	TArray<UAStackComponent*> ComponentsToDamage;
 
-	for (FHitResult Hit : HitResults)
+	for (const FHitResult Hit : HitResults)
 	{
 		FColor DebugColor = FColor::Blue;
 		
-		AActor* HitActor = Hit.GetActor();
+		const AActor* HitActor = Hit.GetActor();
 		if (HitActor)
 		{
 			UAStackComponent* StackComp = Cast<UAStackComponent>(HitActor->GetComponentByClass(UAStackComponent::StaticClass()));

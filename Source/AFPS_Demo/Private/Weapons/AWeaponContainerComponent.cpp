@@ -71,7 +71,7 @@ bool UAWeaponContainerComponent::InstantiateWeapon(TSubclassOf<AAWeaponBase> Wea
 		return false;
 	}
 
-	FTransform SpawnTransform = FTransform(OwningCharacter->GetControlRotation(), OwningCharacter->GetActorLocation());
+	const FTransform SpawnTransform = FTransform(OwningCharacter->GetControlRotation(), OwningCharacter->GetActorLocation());
 
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.Owner = OwningCharacter;
@@ -296,7 +296,7 @@ void UAWeaponContainerComponent::OnEquipRailInput()
 	ProcessSwapInput(RailGameplayTag);
 }
 
-AAWeaponBase* UAWeaponContainerComponent::GetWeapon(FGameplayTag WeaponIdentifier) const
+AAWeaponBase* UAWeaponContainerComponent::GetWeapon(const FGameplayTag WeaponIdentifier) const
 {
 	for (AAWeaponBase* Weapon : Weapons)
 	{

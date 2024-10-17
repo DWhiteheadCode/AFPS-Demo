@@ -53,7 +53,7 @@ protected:
 	bool InstantiateWeapon(TSubclassOf<AAWeaponBase> WeaponClass);
 
 	UFUNCTION()
-	AAWeaponBase* GetWeapon(FGameplayTag WeaponIdentifier) const;
+	AAWeaponBase* GetWeapon(const FGameplayTag WeaponIdentifier) const;
 
 	// WEAPON SWAPPING -------------------------------------------------------
 	UPROPERTY(EditAnywhere, Category = "Weapon Swapping")
