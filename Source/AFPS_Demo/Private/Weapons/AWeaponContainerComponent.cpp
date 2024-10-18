@@ -103,32 +103,44 @@ bool UAWeaponContainerComponent::InstantiateWeapon(TSubclassOf<AAWeaponBase> Wea
 
 void UAWeaponContainerComponent::OnFireStart()
 {
-	if (bIsUnequippingWeapon || bIsEquippingWeapon || bIsWaitingToUnequipWeapon)
+	if (State == WeaponContainerState::NOT_EQUIPPED)
 	{
-		bShouldFireOnSwapEnd = true;
+		UE_LOG(LogTemp, Error, TEXT("WeaponContainer can't start fire while State is NOT_EQUIPPED"));
+		return;
 	}
-	else if (EquippedWeapon)
+
+	if (State == WeaponContainerState::READY && EquippedWeapon)
 	{
 		EquippedWeapon->StartFire();
+	}
+	else
+	{
+		bShouldFireOnSwapEnd = true;
 	}
 }
 
 void UAWeaponContainerComponent::OnFireStop()
 {
-	if (bIsUnequippingWeapon || bIsEquippingWeapon || bIsWaitingToUnequipWeapon)
+	if (State == WeaponContainerState::NOT_EQUIPPED)
 	{
-		bShouldFireOnSwapEnd = false;
+		UE_LOG(LogTemp, Error, TEXT("WeaponContainer can't stop fire while State is NOT_EQUIPPED"));
+		return;
 	}
-	else if (EquippedWeapon)
+
+	if (State == WeaponContainerState::READY && EquippedWeapon)
 	{
 		EquippedWeapon->StopFire();
+	}
+	else
+	{
+		bShouldFireOnSwapEnd = false;
 	}
 }
 
 void UAWeaponContainerComponent::ProcessSwapInput(FGameplayTag WeaponIdentifier)
 {
 	// Must wait for the equip to complete before starting a swap to another weapon
-	if (bIsEquippingWeapon)
+	if (State == WeaponContainerState::EQUIPPING)
 	{
 		//UE_LOG(LogTemp, Log, TEXT("Ignoring weapon swap input as a weapon is already being equipped"));
 		return;
@@ -151,8 +163,8 @@ void UAWeaponContainerComponent::ProcessSwapInput(FGameplayTag WeaponIdentifier)
 
 	WeaponToSwapTo = Weapon;
 
-	// Don't start a swap as one is already in progress - simply update target
-	if (bIsUnequippingWeapon)
+	// Don't start a new swap as one is already in progress - simply update target for the current swap
+	if (State == WeaponContainerState::UNEQUIPPING)
 	{
 		UE_LOG(LogTemp, Log, TEXT("A weapon is already being unequipped. WeaponToSwapTo has been updated, but not starting new swap."));
 		return;
@@ -160,10 +172,9 @@ void UAWeaponContainerComponent::ProcessSwapInput(FGameplayTag WeaponIdentifier)
 
 	if (EquippedWeapon)
 	{
-		// Used to preserve firing if trigger is held through weapon switch
 		bShouldFireOnSwapEnd = EquippedWeapon->IsFiring();
 
-		if (!EquippedWeapon->IsFiring()) // Not firing, so just instantly start the swap
+		if (!EquippedWeapon->IsFiring())
 		{
 			UE_LOG(LogTemp, Log, TEXT("Starting swap immediately"));
 			StartWeaponSwap();
@@ -175,20 +186,20 @@ void UAWeaponContainerComponent::ProcessSwapInput(FGameplayTag WeaponIdentifier)
 
 			UE_LOG(LogTemp, Log, TEXT("Starting swap in [%f] seconds"), PreSwapDelaySeconds);
 
-			bIsWaitingToUnequipWeapon = true;
+			State = WeaponContainerState::WAITING_TO_UNEQUIP;
 			GetWorld()->GetTimerManager().SetTimer(TimerHandle_WeaponSwap, this, &UAWeaponContainerComponent::StartWeaponSwap, PreSwapDelaySeconds);
 		}
 	}
 	else // Equipping first weapon, ignore unequip delay
 	{
-		bIsEquippingWeapon = true;
+		State = WeaponContainerState::EQUIPPING;
 		GetWorld()->GetTimerManager().SetTimer(TimerHandle_WeaponSwap, this, &UAWeaponContainerComponent::OnWeaponEquipDelayEnd, WeaponEquipDelaySeconds);
 	}		
 }
 
 void UAWeaponContainerComponent::StartWeaponSwap()
 {
-	if (bIsUnequippingWeapon || bIsEquippingWeapon)
+	if (State == WeaponContainerState::UNEQUIPPING || State == WeaponContainerState::EQUIPPING)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Attempted to start weapon swap while already swapping weapon."));
 		return;
@@ -200,22 +211,15 @@ void UAWeaponContainerComponent::StartWeaponSwap()
 		return;
 	}
 
-	bIsWaitingToUnequipWeapon = false;
-	bIsUnequippingWeapon = true;
+	State = WeaponContainerState::UNEQUIPPING;
 	GetWorld()->GetTimerManager().SetTimer(TimerHandle_WeaponSwap, this, &UAWeaponContainerComponent::OnWeaponUnequipDelayEnd, WeaponUnequipDelaySeconds);
 }
 
 void UAWeaponContainerComponent::OnWeaponUnequipDelayEnd()
 {	
-	if (!bIsUnequippingWeapon)
+	if (State != WeaponContainerState::UNEQUIPPING)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("OnWeaponUnequipDelayEnd() called, but bIsUnequippingWeapon was false"));
-		return;
-	}
-
-	if (bIsEquippingWeapon)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("OnWeaponUnequipDelayEnd() called, but bIsEquippingWeapon was true"));
+		UE_LOG(LogTemp, Warning, TEXT("OnWeaponUnequipDelayEnd() called, but State wasn't UNEQUIPPING"));
 		return;
 	}
 
@@ -224,25 +228,24 @@ void UAWeaponContainerComponent::OnWeaponUnequipDelayEnd()
 		EquippedWeapon->UnequipWeapon();
 	}
 
-	bIsUnequippingWeapon = false;
-	bIsEquippingWeapon = true;
+	State = WeaponContainerState::EQUIPPING;
 
 	GetWorld()->GetTimerManager().SetTimer(TimerHandle_WeaponSwap, this, &UAWeaponContainerComponent::OnWeaponEquipDelayEnd, WeaponEquipDelaySeconds);
 }
 
 void UAWeaponContainerComponent::OnWeaponEquipDelayEnd()
 {
+	if (State != WeaponContainerState::EQUIPPING)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("OnWeaponEquipDelayEnd() called, but State wasn't EQUIPPING"));
+		return;
+	}
+
 	if (!WeaponToSwapTo)
 	{
 		UE_LOG(LogTemp, Error, TEXT("OnWeaponEquipDelayEnd() callled, but WeaponToSwapTo was null"));
 		return;
-	}
-
-	if (!bIsEquippingWeapon)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("OnWeaponEquipDelayEnd() called, but bIsEquippingWeapon was false"));
-		return;
-	}
+	}	
 
 	WeaponToSwapTo->EquipWeapon();
 
@@ -254,7 +257,7 @@ void UAWeaponContainerComponent::OnWeaponEquipDelayEnd()
 		EquippedWeapon->StartFire();
 	}
 
-	bIsEquippingWeapon = false;
+	State = WeaponContainerState::READY;
 }
 
 void UAWeaponContainerComponent::EquipDefaultWeapon()
@@ -268,8 +271,16 @@ void UAWeaponContainerComponent::EquipDefaultWeapon()
 	if (DefaultWeapon)
 	{
 		WeaponToSwapTo = DefaultWeapon;
-		bIsEquippingWeapon = true;
-		GetWorld()->GetTimerManager().SetTimer(TimerHandle_WeaponSwap, this, &UAWeaponContainerComponent::OnWeaponEquipDelayEnd, WeaponEquipDelaySeconds);
+
+		if (State == WeaponContainerState::NOT_EQUIPPED) // Equipping first weapon. Skip unequip time.
+		{
+			State = WeaponContainerState::EQUIPPING;
+			GetWorld()->GetTimerManager().SetTimer(TimerHandle_WeaponSwap, this, &UAWeaponContainerComponent::OnWeaponEquipDelayEnd, WeaponEquipDelaySeconds);
+		}
+		else
+		{
+			StartWeaponSwap();
+		}		
 	}	
 }
 
