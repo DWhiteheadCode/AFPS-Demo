@@ -23,7 +23,7 @@ To streamline these common use cases, I have created two trace channels: `Penetr
 ## Weapon Swapping
 Each weapon has a dedicated keybind to swap to it. 
 
-When a weapon-swap-key is pressed (while a swap is not already in progress), two things can occur:
+When a weapon-swap key is pressed (while a swap is not already in progress), two things can occur:
 - If the keybind is for the weapon that is currently equipped, the input will be ignored
 - If the keybind is for any other weapon (that the player has) a swap will start
 
@@ -34,14 +34,14 @@ Swapping weapons occurs in two main stages:
 ### Unequipping the Old Weapon
 When a new swap starts, the equipped weapon must be unequipped. The amount of time this takes is defined by `AWeaponContainerComponent::WeaponUnequipDelay`. 
 
-If, at the time that the weapon-swap-key is pressed, the `EquippedWeapon` is firing, `StopFire()` will be called on that weapon. Before the unequip can start, you must first wait for the `EquippedWeapon`'s `FireDelay` to complete (if it was firing).
+If, at the time that the weapon-swap key is pressed, the `EquippedWeapon` is firing, `StopFire()` will be called on that weapon. Before the unequip can start, you must first wait for the `EquippedWeapon`'s `FireDelay` to complete (if it was firing). This prevents the player from firing a slow-fire-rate weapon, then immediately swapping to another weapon.
 
-During the unequip time, any weapon-swap-key inputs are valid (including to the weapon that is being unequipped). These inputs will simply update the `WeaponToSwapTo` that will begin equipping after the unequip delay.
+During the unequip time, any weapon-swap key inputs are valid (including to the weapon that is being unequipped). These inputs will simply update the `WeaponToSwapTo` that will begin equipping after the unequip delay.
 
 ### Equipping the New Weapon
-Once the previous weapon was unequipped, the new weapon (indicated by the specific weapon-swap-key) can be equipped. The amount of time this takes is defined by `AWeaponContainerComponent::WeaponEquipDelay`. 
+Once the previous weapon was unequipped, the new weapon (determined by the most recently pressed weapon-swap key) can be equipped. The amount of time this takes is defined by `AWeaponContainerComponent::WeaponEquipDelay`. 
 
-While a weapon is being equipped, all weapon-swap-key inputs are ignored.
+While a weapon is being equipped, all weapon-swap key inputs are ignored.
 
 If the player is holding the trigger when the equip ends, the new weapon will start immediately firing.
 
@@ -63,7 +63,7 @@ Note: the current implementations for `AProjectile_Rocket::CalculateDamage()` an
 ## Types of Stack
 ### Health vs Armour
 Health and armour are both non-negative integer values. The only differences between them are:
-- Which `StackPickups` can heal them (e.g. `HealthBubbles` heal `Health`, while `LightArmours` heal `Armour)
+- Which `StackPickups` can heal them (e.g. `HealthBubbles` heal `Health`, while `LightArmours` heal `Armour`)
 - Their use when calculating damage (see `"Applying Damage"` below)
 - When `Health` reaches `0`, the player dies (not yet implemented); though when `Armour` reaches `0`, nothing happens
 
