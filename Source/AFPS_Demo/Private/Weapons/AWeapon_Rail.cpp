@@ -53,7 +53,7 @@ TArray<UAStackComponent*> AAWeapon_Rail::GetComponentsToDamage() const
 
 	TArray<UAStackComponent*> ComponentsToDamage;
 
-	for (const FHitResult Hit : HitResults)
+	for (const FHitResult& Hit : HitResults)
 	{
 		FColor DebugColor = FColor::Blue;
 		
