@@ -15,6 +15,16 @@ class AAPlayerCharacter;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnWeaponAdded, UAWeaponContainerComponent*, OwningComp, AAWeaponBase*, Weapon);
 
+UENUM(BlueprintType)
+enum WeaponEquipState
+{
+	NOT_EQUIPPED		 UMETA(DisplayName = "NOT EQUIPPED"),
+	WAITING_TO_UNEQUIP   UMETA(DisplayName = "WAITING TO UNEQUIP"),
+	UNEQUIPPING			 UMETA(DisplayName = "UNEQUIPPING"),
+	EQUIPPING			 UMETA(DisplayName = "EQUIPPING"),
+	READY				 UMETA(DisplayName = "READY")
+};
+
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class AFPS_DEMO_API UAWeaponContainerComponent : public UActorComponent
@@ -72,13 +82,7 @@ protected:
 	void OnWeaponEquipDelayEnd();
 
 	UPROPERTY()
-	bool bIsWaitingToUnequipWeapon = false;
-
-	UPROPERTY()
-	bool bIsUnequippingWeapon = false;
-
-	UPROPERTY()
-	bool bIsEquippingWeapon = false;
+	TEnumAsByte<WeaponEquipState> WeaponEquipState = WeaponEquipState::NOT_EQUIPPED;
 
 	UPROPERTY()
 	TObjectPtr<AAWeaponBase> WeaponToSwapTo = nullptr;
