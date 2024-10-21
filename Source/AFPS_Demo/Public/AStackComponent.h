@@ -4,14 +4,15 @@
 #include "Components/ActorComponent.h"
 #include "AStackComponent.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_SixParams(
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_SevenParams(
 	FOnStackChanged,
 	UAStackComponent*, OwningComp,
 	AActor*, InstigatorActor,
 	int, NewHealth,
 	int, DeltaHealth,
 	int, NewArmour,
-	int, DeltaArmour
+	int, DeltaArmour,
+	int, TotalDelta
 );
 
 

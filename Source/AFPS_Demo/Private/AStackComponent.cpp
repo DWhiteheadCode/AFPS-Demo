@@ -13,7 +13,7 @@ void UAStackComponent::BeginPlay()
 	Health = StartingHealth;
 	Armour = StartingArmour;
 
-	OnStackChanged.Broadcast(this, GetOwner(), Health, Health, Armour, Armour);
+	OnStackChanged.Broadcast(this, GetOwner(), Health, Health, Armour, Armour, (Health + Armour));
 
 	if (BaseHealthMax > OverHealthMax)
 	{
@@ -76,7 +76,10 @@ bool UAStackComponent::ApplyDamage(int Amount, AActor* InstigatorActor)
 	Health = FMath::Max( (Health - HealthPortion), 0 );
 	Armour = FMath::Max( (Armour - ArmourPortion), 0 );
 
-	OnStackChanged.Broadcast( this, InstigatorActor, Health, (Health - OldHealth), Armour, (Armour - OldArmour) );
+	const int ActualHealthDelta = Health - OldHealth;
+	const int ActualArmourDelta = Armour - OldArmour;
+
+	OnStackChanged.Broadcast( this, InstigatorActor, Health, ActualHealthDelta, Armour, ActualArmourDelta, (ActualHealthDelta + ActualArmourDelta));
 
 	if (Health == 0)
 	{
@@ -113,7 +116,7 @@ bool UAStackComponent::AddHealth(const int Amount, const bool bCanOverHeal, AAct
 
 	const int ActualHealthDelta = Health - OldHealth;
 
-	OnStackChanged.Broadcast(this, InstigatorActor, Health, ActualHealthDelta, Armour, 0);
+	OnStackChanged.Broadcast(this, InstigatorActor, Health, ActualHealthDelta, Armour, 0, ActualHealthDelta);
 
 	// This healed overhealth, so set/reset decay timer
 	if (bCanOverHeal && Health > BaseHealthMax && CanDecayOverHealth())
@@ -151,7 +154,7 @@ bool UAStackComponent::AddArmour(const int Amount, const bool bCanOverHeal, AAct
 
 	const int ActualArmourDelta = Armour - OldArmour;
 
-	OnStackChanged.Broadcast(this, InstigatorActor, Health, 0, Armour, ActualArmourDelta);
+	OnStackChanged.Broadcast(this, InstigatorActor, Health, 0, Armour, ActualArmourDelta, ActualArmourDelta);
 
 	// This healed overarmour, so set/reset decay timer
 	if (bCanOverHeal && Armour > BaseArmourMax && CanDecayOverArmour())
@@ -181,7 +184,9 @@ void UAStackComponent::DecayOverHealth()
 
 	Health -= AmountToDecay;
 	
-	OnStackChanged.Broadcast(this, GetOwner(), Health, (Health - OldHealth), Armour, 0);
+	const int ActualHealthDelta = Health - OldHealth;
+
+	OnStackChanged.Broadcast(this, GetOwner(), Health, ActualHealthDelta, Armour, 0, ActualHealthDelta);
 
 	// More health needs to be decayed
 	if (Health > BaseHealthMax)
@@ -209,7 +214,9 @@ void UAStackComponent::DecayOverArmour()
 
 	Armour -= AmountToDecay;
 
-	OnStackChanged.Broadcast(this, GetOwner(), Health, 0, Armour, (Armour - OldArmour));
+	const int ActualArmourDelta = Armour - OldArmour;
+
+	OnStackChanged.Broadcast(this, GetOwner(), Health, 0, Armour, ActualArmourDelta, ActualArmourDelta);
 	
 	// More armour needs to be decayed
 	if (Armour > BaseArmourMax)
