@@ -36,7 +36,7 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	TObjectPtr<UAWeaponContainerComponent> WeaponComp;
 
-	UPROPERTY(VisibleAnywhere, Category = "Components")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<UAStackComponent> StackComp;
 
 	// INPUT ------------------------------------------------------------
