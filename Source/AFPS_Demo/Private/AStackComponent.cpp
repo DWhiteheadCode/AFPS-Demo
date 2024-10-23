@@ -1,19 +1,15 @@
 #include "AStackComponent.h"
 
+#include "Net/UnrealNetwork.h"
 
 UAStackComponent::UAStackComponent()
 {
-
+	SetIsReplicatedByDefault(true);
 }
 
 void UAStackComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
-	Health = StartingHealth;
-	Armour = StartingArmour;
-
-	OnStackChanged.Broadcast(this, GetOwner(), Health, Health, Armour, Armour, (Health + Armour));
 
 	if (BaseHealthMax > OverHealthMax)
 	{
@@ -27,17 +23,25 @@ void UAStackComponent::BeginPlay()
 		return;
 	}	
 
-	// Started with over-health, so start decay timer
-	if (Health > BaseHealthMax && CanDecayOverHealth())
+	if (GetOwner()->HasAuthority())
 	{
-		GetWorld()->GetTimerManager().SetTimer(TimerHandle_OverHealthDecay, this, &UAStackComponent::DecayOverHealth, OverHealthDecayIntervalSeconds);
-	}
+		Health = StartingHealth;
+		Armour = StartingArmour;
 
-	// Started with over-armour, so start decay timer
-	if (Armour > BaseArmourMax && CanDecayOverArmour())
-	{
-		GetWorld()->GetTimerManager().SetTimer(TimerHandle_OverArmourDecay, this, &UAStackComponent::DecayOverArmour, OverArmourDecayIntervalSeconds);
-	}
+		MulticastStackChanged(this, GetOwner(), Health, Health, Armour, Armour, (Health + Armour));
+
+		// Started with over-health, so start decay timer
+		if (Health > BaseHealthMax && CanDecayOverHealth())
+		{
+			GetWorld()->GetTimerManager().SetTimer(TimerHandle_OverHealthDecay, this, &UAStackComponent::DecayOverHealth, OverHealthDecayIntervalSeconds);
+		}
+
+		// Started with over-armour, so start decay timer
+		if (Armour > BaseArmourMax && CanDecayOverArmour())
+		{
+			GetWorld()->GetTimerManager().SetTimer(TimerHandle_OverArmourDecay, this, &UAStackComponent::DecayOverArmour, OverArmourDecayIntervalSeconds);
+		}
+	}	
 }
 
 bool UAStackComponent::ApplyDamage(int Amount, AActor* InstigatorActor)
@@ -66,24 +70,31 @@ bool UAStackComponent::ApplyDamage(int Amount, AActor* InstigatorActor)
 		Amount *= SelfDamageMultiplier;
 	}
 
+	// Do as much damage to Armour as possible, then apply remaining damage to Health
+	const int ArmourPortion = FMath::Min(Armour, Amount * ArmourEfficiency);
+	const int HealthPortion = Amount - ArmourPortion;
+
+
 	const int OldHealth = Health;
 	const int OldArmour = Armour;
 
-	// Do as much damage to Armour as possible, then apply remaining damage to Health
-	const int ArmourPortion = FMath::Min(Armour, Amount * ArmourEfficiency); 
-	const int HealthPortion = Amount - ArmourPortion;
+	const int NewHealth = FMath::Max((OldHealth - HealthPortion), 0);
+	const int NewArmour = FMath::Max((OldArmour - ArmourPortion), 0);
 
-	Health = FMath::Max( (Health - HealthPortion), 0 );
-	Armour = FMath::Max( (Armour - ArmourPortion), 0 );
+	const int ActualHealthDelta = NewHealth - OldHealth;
+	const int ActualArmourDelta = NewArmour - OldArmour;
 
-	const int ActualHealthDelta = Health - OldHealth;
-	const int ActualArmourDelta = Armour - OldArmour;
-
-	OnStackChanged.Broadcast( this, InstigatorActor, Health, ActualHealthDelta, Armour, ActualArmourDelta, (ActualHealthDelta + ActualArmourDelta));
-
-	if (Health == 0)
+	// Actually apply changes if on server.
+	if (GetOwner()->HasAuthority())
 	{
-		// TODO Death logic via GameMode
+		Health = NewHealth;
+		Armour = NewArmour;
+		MulticastStackChanged(this, InstigatorActor, NewHealth, ActualHealthDelta, NewArmour, ActualArmourDelta, (ActualHealthDelta + ActualArmourDelta));
+
+		if (Health == 0)
+		{
+			// TODO Death logic via GameMode
+		}
 	}
 
 	return true;
@@ -111,19 +122,21 @@ bool UAStackComponent::AddHealth(const int Amount, const bool bCanOverHeal, AAct
 
 	const int OldHealth = Health;
 	const int NewMaxHealth = bCanOverHeal ? OverHealthMax : BaseHealthMax;
+	const int NewHealth = FMath::Min((Health + Amount), NewMaxHealth);
+	const int ActualHealthDelta = NewHealth - OldHealth;
 
-	Health = FMath::Min((Health + Amount), NewMaxHealth);
-
-	const int ActualHealthDelta = Health - OldHealth;
-
-	OnStackChanged.Broadcast(this, InstigatorActor, Health, ActualHealthDelta, Armour, 0, ActualHealthDelta);
-
-	// This healed overhealth, so set/reset decay timer
-	if (bCanOverHeal && Health > BaseHealthMax && CanDecayOverHealth())
+	if (GetOwner()->HasAuthority())
 	{
-		GetWorld()->GetTimerManager().SetTimer(TimerHandle_OverHealthDecay, this, &UAStackComponent::DecayOverHealth, OverHealthDecayIntervalSeconds);
-	}
+		Health = NewHealth;
+		MulticastStackChanged(this, InstigatorActor, Health, ActualHealthDelta, Armour, 0, ActualHealthDelta);
 
+		// This healed overhealth, so set/reset decay timer
+		if (bCanOverHeal && Health > BaseHealthMax && CanDecayOverHealth())
+		{
+			GetWorld()->GetTimerManager().SetTimer(TimerHandle_OverHealthDecay, this, &UAStackComponent::DecayOverHealth, OverHealthDecayIntervalSeconds);
+		}
+	}		
+	
     return true;
 }
 
@@ -149,21 +162,25 @@ bool UAStackComponent::AddArmour(const int Amount, const bool bCanOverHeal, AAct
 
 	const int OldArmour = Armour;
 	const int NewMaxArmour = bCanOverHeal ? OverArmourMax : BaseArmourMax;
+	const int NewArmour = FMath::Min((Armour + Amount), NewMaxArmour);
+	const int ActualArmourDelta = NewArmour - OldArmour;
 
-	Armour = FMath::Min((Armour + Amount), NewMaxArmour);
-
-	const int ActualArmourDelta = Armour - OldArmour;
-
-	OnStackChanged.Broadcast(this, InstigatorActor, Health, 0, Armour, ActualArmourDelta, ActualArmourDelta);
-
-	// This healed overarmour, so set/reset decay timer
-	if (bCanOverHeal && Armour > BaseArmourMax && CanDecayOverArmour())
+	if (GetOwner()->HasAuthority())
 	{
-		GetWorld()->GetTimerManager().SetTimer(TimerHandle_OverArmourDecay, this, &UAStackComponent::DecayOverArmour, OverArmourDecayIntervalSeconds);
-	}
+		Armour = NewArmour;
+		MulticastStackChanged(this, InstigatorActor, Health, 0, Armour, ActualArmourDelta, ActualArmourDelta);
 
+		// This healed overarmour, so set/reset decay timer
+		if (bCanOverHeal && Armour > BaseArmourMax && CanDecayOverArmour())
+		{
+			GetWorld()->GetTimerManager().SetTimer(TimerHandle_OverArmourDecay, this, &UAStackComponent::DecayOverArmour, OverArmourDecayIntervalSeconds);
+		}
+	}
+	
 	return true;
 }
+
+
 
 void UAStackComponent::DecayOverHealth()
 {
@@ -180,18 +197,18 @@ void UAStackComponent::DecayOverHealth()
 	}
 
 	const int AmountToDecay = FMath::Min( Health - BaseHealthMax, OverHealthDecayAmount );
-	const int OldHealth = Health;
+	const int NewHealth = Health - AmountToDecay;
 
-	Health -= AmountToDecay;
-	
-	const int ActualHealthDelta = Health - OldHealth;
-
-	OnStackChanged.Broadcast(this, GetOwner(), Health, ActualHealthDelta, Armour, 0, ActualHealthDelta);
-
-	// More health needs to be decayed
-	if (Health > BaseHealthMax)
+	if (GetOwner()->HasAuthority())
 	{
-		GetWorld()->GetTimerManager().SetTimer(TimerHandle_OverHealthDecay, this, &UAStackComponent::DecayOverHealth, OverHealthDecayIntervalSeconds);
+		Health = NewHealth;
+		MulticastStackChanged(this, GetOwner(), Health, AmountToDecay, Armour, 0, AmountToDecay);
+
+		// More health needs to be decayed
+		if (Health > BaseHealthMax)
+		{
+			GetWorld()->GetTimerManager().SetTimer(TimerHandle_OverHealthDecay, this, &UAStackComponent::DecayOverHealth, OverHealthDecayIntervalSeconds);
+		}
 	}
 }
 
@@ -210,19 +227,19 @@ void UAStackComponent::DecayOverArmour()
 	}
 
 	const int AmountToDecay = FMath::Min(Armour - BaseArmourMax, OverArmourDecayAmount);
-	const int OldArmour = Armour;
+	const int NewArmour = Armour - AmountToDecay;
 
-	Armour -= AmountToDecay;
-
-	const int ActualArmourDelta = Armour - OldArmour;
-
-	OnStackChanged.Broadcast(this, GetOwner(), Health, 0, Armour, ActualArmourDelta, ActualArmourDelta);
-	
-	// More armour needs to be decayed
-	if (Armour > BaseArmourMax)
+	if (GetOwner()->HasAuthority())
 	{
-		GetWorld()->GetTimerManager().SetTimer(TimerHandle_OverArmourDecay, this, &UAStackComponent::DecayOverArmour, OverArmourDecayIntervalSeconds);
-	}
+		Armour = NewArmour;
+		MulticastStackChanged(this, GetOwner(), Health, 0, Armour, AmountToDecay, AmountToDecay);
+
+		// More armour needs to be decayed
+		if (Armour > BaseArmourMax)
+		{
+			GetWorld()->GetTimerManager().SetTimer(TimerHandle_OverArmourDecay, this, &UAStackComponent::DecayOverArmour, OverArmourDecayIntervalSeconds);
+		}
+	}	
 }
 
 int UAStackComponent::GetHealth() const
@@ -243,4 +260,34 @@ bool UAStackComponent::CanDecayOverHealth() const
 bool UAStackComponent::CanDecayOverArmour() const
 {
 	return OverArmourDecayAmount > 0 && OverArmourDecayIntervalSeconds > 0;
+}
+
+void UAStackComponent::MulticastStackChanged_Implementation(UAStackComponent* OwningComp, AActor* InstigatorActor, 
+	int NewHealth, int DeltaHealth, int NewArmour, int DeltaArmour, int TotalDelta)
+{
+	OnStackChanged.Broadcast(OwningComp, InstigatorActor, NewHealth, DeltaHealth, NewArmour, DeltaArmour, TotalDelta);
+}
+
+void UAStackComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	// Of these, only "Health" and "Armour" are expected to change during normal execution, and 
+	// several should only be used by the server.
+	// TODO - Check if it is better to replicate the other properties to ensure consistency, or 
+	//        not replicate them to save bandwidth etc.
+
+	DOREPLIFETIME(UAStackComponent, Health);
+	DOREPLIFETIME(UAStackComponent, StartingHealth);
+	DOREPLIFETIME(UAStackComponent, BaseHealthMax);
+	DOREPLIFETIME(UAStackComponent, OverHealthMax);
+	DOREPLIFETIME(UAStackComponent, OverHealthDecayIntervalSeconds);
+	DOREPLIFETIME(UAStackComponent, OverHealthDecayAmount);
+
+	DOREPLIFETIME(UAStackComponent, Armour);
+	DOREPLIFETIME(UAStackComponent, StartingArmour);
+	DOREPLIFETIME(UAStackComponent, BaseArmourMax);
+	DOREPLIFETIME(UAStackComponent, OverArmourMax);
+	DOREPLIFETIME(UAStackComponent, OverArmourDecayIntervalSeconds);
+	DOREPLIFETIME(UAStackComponent, OverArmourDecayAmount);
 }
