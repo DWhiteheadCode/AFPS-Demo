@@ -59,19 +59,19 @@ protected:
 	UPROPERTY(Replicated)
 	int Health = 125;
 
-	UPROPERTY(EditAnywhere, Replicated, Category = "Health")
+	UPROPERTY(EditAnywhere, Category = "Health")
 	int StartingHealth = 125;
 
-	UPROPERTY(EditAnywhere, Replicated, Category = "Health")
+	UPROPERTY(EditAnywhere, Category = "Health")
 	int BaseHealthMax = 100;
 
-	UPROPERTY(EditAnywhere, Replicated, Category = "Health")
+	UPROPERTY(EditAnywhere, Category = "Health")
 	int OverHealthMax = 175; // Max health, including base-health and overhealth
 
-	UPROPERTY(EditAnywhere, Replicated, Category = "Health")
+	UPROPERTY(EditAnywhere, Category = "Health")
 	float OverHealthDecayIntervalSeconds = 1.f; // Time between over-health decay ticks. 
 
-	UPROPERTY(EditAnywhere, Replicated, Category = "Health")
+	UPROPERTY(EditAnywhere, Category = "Health")
 	int OverHealthDecayAmount = 2; // Amount of OverHealth to decay every OverHealthDecayIntervalSeconds
 
 	UFUNCTION()
@@ -87,22 +87,22 @@ protected:
 	UPROPERTY(Replicated)
 	int Armour = 50;
 
-	UPROPERTY(EditAnywhere, Replicated, Category = "Armour")
+	UPROPERTY(EditAnywhere, Category = "Armour")
 	float ArmourEfficiency = 0.67f; // Ratio of damage dealt that is applied to armour
 
-	UPROPERTY(EditAnywhere, Replicated, Category = "Armour")
+	UPROPERTY(EditAnywhere, Category = "Armour")
 	int StartingArmour = 50;	
 
-	UPROPERTY(EditAnywhere, Replicated, Category = "Armour")
+	UPROPERTY(EditAnywhere, Category = "Armour")
 	int BaseArmourMax = 75;
 
-	UPROPERTY(EditAnywhere, Replicated, Category = "Armour")
+	UPROPERTY(EditAnywhere, Category = "Armour")
 	int OverArmourMax = 175; // Max armour, including base-armour and overarmour
 
-	UPROPERTY(EditAnywhere, Replicated, Category = "Armour")
+	UPROPERTY(EditAnywhere, Category = "Armour")
 	float OverArmourDecayIntervalSeconds = 1.f; // Time between over-Armour decay ticks. 
 
-	UPROPERTY(EditAnywhere, Replicated, Category = "Armour")
+	UPROPERTY(EditAnywhere, Category = "Armour")
 	int OverArmourDecayAmount = 2; // Amount of OverArmour to decay every OverArmourDecayIntervalSeconds
 
 	UFUNCTION()

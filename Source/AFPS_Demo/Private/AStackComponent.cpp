@@ -272,22 +272,6 @@ void UAStackComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	// Of these, only "Health" and "Armour" are expected to change during normal execution, and 
-	// several should only be used by the server.
-	// TODO - Check if it is better to replicate the other properties to ensure consistency, or 
-	//        not replicate them to save bandwidth etc.
-
 	DOREPLIFETIME(UAStackComponent, Health);
-	DOREPLIFETIME(UAStackComponent, StartingHealth);
-	DOREPLIFETIME(UAStackComponent, BaseHealthMax);
-	DOREPLIFETIME(UAStackComponent, OverHealthMax);
-	DOREPLIFETIME(UAStackComponent, OverHealthDecayIntervalSeconds);
-	DOREPLIFETIME(UAStackComponent, OverHealthDecayAmount);
-
 	DOREPLIFETIME(UAStackComponent, Armour);
-	DOREPLIFETIME(UAStackComponent, StartingArmour);
-	DOREPLIFETIME(UAStackComponent, BaseArmourMax);
-	DOREPLIFETIME(UAStackComponent, OverArmourMax);
-	DOREPLIFETIME(UAStackComponent, OverArmourDecayIntervalSeconds);
-	DOREPLIFETIME(UAStackComponent, OverArmourDecayAmount);
 }
