@@ -25,6 +25,8 @@ AAProjectile_Rocket::AAProjectile_Rocket()
     ProjectileMovementComp = CreateDefaultSubobject<UProjectileMovementComponent>("ProjectileMoveComp");
 	ProjectileMovementComp->ProjectileGravityScale = 0.f;
 	ProjectileMovementComp->InitialSpeed = 1000.f;
+
+	bReplicates = true;
 }
 
 void AAProjectile_Rocket::PostInitializeComponents()
@@ -50,32 +52,35 @@ void AAProjectile_Rocket::Detonate()
 	DrawDebugSphere(GetWorld(), GetActorLocation(), CloseFalloffRange, 16, FColor::White, false, 5.f, 0, 1.f);
 	DrawDebugSphere(GetWorld(), GetActorLocation(), FarFalloffRange, 16, FColor::White, false, 5.f, 0, 1.f);
 
-    const TArray<AActor*> NearbyActors = GetActorsInExplosionRadius();
- 
-    for (AActor* Actor : NearbyActors)
-    {
-		if (!Actor)
+	if (HasAuthority())
+	{
+		const TArray<AActor*> NearbyActors = GetActorsInExplosionRadius();
+
+		for (AActor* Actor : NearbyActors)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Nullptr Actor returned from GetNearbyActors()"));
-			continue;
+			if (!Actor)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Nullptr Actor returned from GetNearbyActors()"));
+				continue;
+			}
+
+			UAStackComponent* StackComp = Cast<UAStackComponent>(Actor->GetComponentByClass(UAStackComponent::StaticClass()));
+			if (StackComp)
+			{
+				const int Damage = CalculateDamage(Actor);
+
+				if (Damage > 0)
+				{
+					StackComp->ApplyDamage(Damage, GetInstigator());
+				}
+			}
 		}
 
-		UAStackComponent* StackComp = Cast<UAStackComponent>(Actor->GetComponentByClass(UAStackComponent::StaticClass()));
-        if (StackComp)
-        {
-            const int Damage = CalculateDamage(Actor);
-
-            if (Damage > 0)
-            {
-                StackComp->ApplyDamage(Damage, GetInstigator());
-            }
-        }
-    }
-
-	// Destroy self
-	SetActorEnableCollision(false);
-	MeshComp->SetVisibility(false);
-	SetLifeSpan(2.f);
+		// Destroy self
+		SetActorEnableCollision(false);
+		MeshComp->SetVisibility(false);
+		SetLifeSpan(2.f);
+	}
 }
 
 TArray<AActor*> AAProjectile_Rocket::GetActorsInExplosionRadius() const
