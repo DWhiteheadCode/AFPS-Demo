@@ -25,6 +25,21 @@ enum WeaponEquipState
 	READY				 UMETA(DisplayName = "READY")
 };
 
+USTRUCT()
+struct FWeaponSwapRepData
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY()
+	TEnumAsByte<WeaponEquipState> WeaponEquipState = WeaponEquipState::NOT_EQUIPPED;
+
+	UPROPERTY()
+	bool bShouldFireOnSwapEnd = false;
+
+	UPROPERTY()
+	TObjectPtr<AAWeaponBase> WeaponToSwapTo = nullptr;
+};
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class AFPS_DEMO_API UAWeaponContainerComponent : public UActorComponent
@@ -39,6 +54,9 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnWeaponAdded OnWeaponAdded;
 
+	UFUNCTION(Client, Unreliable)
+	void ClientOnWeaponAdded(AAWeaponBase* NewWeapon);
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -50,10 +68,10 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Weapons")
 	TArray<TSubclassOf<AAWeaponBase>> DefaultWeapons;
 		
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Replicated)
 	TArray<TObjectPtr<AAWeaponBase>> Weapons;
 
-	UPROPERTY()
+	UPROPERTY(Replicated)
 	TObjectPtr<AAWeaponBase> EquippedWeapon;
 
 	UFUNCTION()
@@ -69,9 +87,6 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Weapon Swapping")
 	float WeaponEquipDelaySeconds = 0.4f;
 
-	UPROPERTY()
-	bool bShouldFireOnSwapEnd = false;
-
 	UFUNCTION()
 	void StartWeaponSwap();
 
@@ -81,11 +96,11 @@ protected:
 	UFUNCTION()
 	void OnWeaponEquipDelayEnd();
 
-	UPROPERTY()
-	TEnumAsByte<WeaponEquipState> WeaponEquipState = WeaponEquipState::NOT_EQUIPPED;
+	UPROPERTY(ReplicatedUsing="OnRep_WeaponSwap")
+	FWeaponSwapRepData RepData_WeaponSwap;
 
-	UPROPERTY()
-	TObjectPtr<AAWeaponBase> WeaponToSwapTo = nullptr;
+	UFUNCTION()
+	void OnRep_WeaponSwap();
 
 	FTimerHandle TimerHandle_WeaponSwap;
 
@@ -102,14 +117,23 @@ protected:
 	TObjectPtr<UInputAction> FireAction;
 
 	UFUNCTION()
-	void OnFireStart();
+	void OnFireStartInput();
+
+	UFUNCTION(Server, Reliable)
+	void ServerOnFireStartInput();
 
 	UFUNCTION()
-	void OnFireStop();
+	void OnFireStopInput();
+
+	UFUNCTION(Server, Reliable)
+	void ServerOnFireStopInput();
 	
 	// Generic Weapon Swap ----
 	UFUNCTION()
 	void ProcessSwapInput(FGameplayTag WeaponIdentifier);
+
+	UFUNCTION(Server, Reliable)
+	void ServerProcessSwapInput(FGameplayTag WeaponIdentifier);
 
 	// Equip Rocket ----
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")

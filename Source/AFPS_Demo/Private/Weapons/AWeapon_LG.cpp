@@ -26,21 +26,24 @@ void AAWeapon_LG::Fire()
 
 	Super::Fire();
 
-	FHitResult HitResult = PerformTrace();
-
-	if (HasAuthority())
+	if ( (OwningPlayer && OwningPlayer->IsLocallyControlled()) || HasAuthority() )
 	{
-		const AActor* HitActor = HitResult.GetActor();
-		if (HitActor)
-		{
-			UAStackComponent* StackComp = Cast<UAStackComponent>(HitActor->GetComponentByClass(UAStackComponent::StaticClass()));
+		FHitResult HitResult = PerformTrace();
 
-			if (StackComp)
+		if (HasAuthority())
+		{
+			const AActor* HitActor = HitResult.GetActor();
+			if (HitActor)
 			{
-				StackComp->ApplyDamage(Damage, OwningPlayer);
+				UAStackComponent* StackComp = Cast<UAStackComponent>(HitActor->GetComponentByClass(UAStackComponent::StaticClass()));
+
+				if (StackComp)
+				{
+					StackComp->ApplyDamage(Damage, OwningPlayer);
+				}
 			}
 		}
-	}
+	}	
 }
 
 FHitResult AAWeapon_LG::PerformTrace()
@@ -72,5 +75,21 @@ FHitResult AAWeapon_LG::PerformTrace()
 
 	DrawDebugLine(GetWorld(), StartPos, EndPos, FColor::Blue, false, FireDelay, 0, 1.f);
 
+	if (HasAuthority())
+	{
+		MulticastDrawBeam(StartPos, EndPos);
+	}
+
 	return HitResult;
+}
+
+void AAWeapon_LG::MulticastDrawBeam_Implementation(const FVector Start, const FVector End)
+{
+	// Local player already drew beam at time of firing
+	if (OwningPlayer && OwningPlayer->IsLocallyControlled())
+	{
+		return;
+	}
+
+	DrawDebugLine(GetWorld(), Start, End, FColor::Blue, false, FireDelay, 0, 1.f);
 }

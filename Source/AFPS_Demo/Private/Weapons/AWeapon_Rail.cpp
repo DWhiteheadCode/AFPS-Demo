@@ -20,20 +20,25 @@ void AAWeapon_Rail::Fire()
 
 	Super::Fire();
 
-	const TArray<FHitResult> HitResults = PerformTrace(); // Perform trace even on clients to show rail trail
-
-	if (HasAuthority())
+	// Only the local player and the server can get the ControlRotation of OwningPlayer.
+	// Other clients will have to wait for a Multicast from the server containing that info.
+	if ((OwningPlayer && OwningPlayer->IsLocallyControlled()) || HasAuthority())
 	{
-		const TArray<UAStackComponent*> HitStackComponents = GetStackComponentsFromHitResults(HitResults);
+		const TArray<FHitResult> HitResults = PerformTrace(); 
 
-		for (UAStackComponent* StackComp : HitStackComponents)
+		if (HasAuthority())
 		{
-			if (StackComp)
+			const TArray<UAStackComponent*> HitStackComponents = GetStackComponentsFromHitResults(HitResults);
+
+			for (UAStackComponent* StackComp : HitStackComponents)
 			{
-				StackComp->ApplyDamage(Damage, OwningPlayer);
+				if (StackComp)
+				{
+					StackComp->ApplyDamage(Damage, OwningPlayer);
+				}
 			}
 		}
-	}
+	}		
 }
 
 TArray<FHitResult> AAWeapon_Rail::PerformTrace()
@@ -64,6 +69,11 @@ TArray<FHitResult> AAWeapon_Rail::PerformTrace()
 	}
 	
 	DrawDebugLine(GetWorld(), StartPos, EndPos, FColor::Green, false, FireDelay, 0, 1.f);
+
+	if (HasAuthority())
+	{
+		MulticastDrawTrail(StartPos, EndPos);
+	}
 
 	return HitResults;
 }
@@ -98,4 +108,15 @@ TArray<UAStackComponent*> AAWeapon_Rail::GetStackComponentsFromHitResults(const 
 	}
 
 	return StackComponents;
+}
+
+void AAWeapon_Rail::MulticastDrawTrail_Implementation(const FVector Start, const FVector End)
+{
+	// The local player already drew the trail at time of firing
+	if (OwningPlayer && OwningPlayer->IsLocallyControlled())
+	{
+		return;
+	}
+
+	DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, FireDelay, 0, 1.f);
 }

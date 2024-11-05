@@ -35,4 +35,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Trace")
 	TEnumAsByte<ECollisionChannel> TraceChannel;
 
+	UFUNCTION(NetMulticast, Unreliable)
+	void MulticastDrawTrail(const FVector Start, const FVector End);
+
 };

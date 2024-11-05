@@ -30,4 +30,7 @@ protected:
 	UFUNCTION()
 	FHitResult PerformTrace();
 
+	UFUNCTION(NetMulticast, Unreliable)
+	void MulticastDrawBeam(const FVector Start, const FVector End);
+
 };

@@ -2,13 +2,16 @@
 
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
+#include "Net/UnrealNetwork.h"
 
 #include "Weapons/AWeaponBase.h"
 #include "APlayerCharacter.h"
 
+#include "../AFPS_Demo.h"
+
 UAWeaponContainerComponent::UAWeaponContainerComponent()
 {
-	
+	SetIsReplicatedByDefault(true);
 }
 
 void UAWeaponContainerComponent::BeginPlay()
@@ -23,14 +26,20 @@ void UAWeaponContainerComponent::BeginPlay()
 		return;
 	}
 
-	SetupWeaponBindings();
-
-	for (TSubclassOf<AAWeaponBase> WeaponClass : DefaultWeapons)
+	if (OwningCharacter->IsLocallyControlled())
 	{
-		InstantiateWeapon(WeaponClass);
+		SetupWeaponBindings();
 	}	
 
-	EquipDefaultWeapon();
+	if (GetOwner()->HasAuthority())
+	{
+		for (TSubclassOf<AAWeaponBase> WeaponClass : DefaultWeapons)
+		{
+			InstantiateWeapon(WeaponClass);
+		}
+
+		EquipDefaultWeapon();
+	}
 }
 
 void UAWeaponContainerComponent::SetupWeaponBindings()
@@ -52,8 +61,8 @@ void UAWeaponContainerComponent::SetupWeaponBindings()
 		if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerController->InputComponent))
 		{
 			// Fire
-			EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Started, this, &UAWeaponContainerComponent::OnFireStart);
-			EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Completed, this, &UAWeaponContainerComponent::OnFireStop);
+			EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Started, this, &UAWeaponContainerComponent::OnFireStartInput);
+			EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Completed, this, &UAWeaponContainerComponent::OnFireStopInput);
 
 			// Weapon Switching
 			EnhancedInputComponent->BindAction(EquipRocketAction, ETriggerEvent::Triggered, this, &UAWeaponContainerComponent::OnEquipRocketInput);
@@ -68,6 +77,12 @@ bool UAWeaponContainerComponent::InstantiateWeapon(TSubclassOf<AAWeaponBase> Wea
 	if (!OwningCharacter)
 	{
 		UE_LOG(LogTemp, Error, TEXT("Tried to instantiate weapon in WeaponContainerComponent [%s], but OwningCharacter was null"), *GetNameSafe(this));
+		return false;
+	}
+
+	if (!OwningCharacter->HasAuthority())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Client tried to instantiate weapon in component [%s]."), *GetNameSafe(this));
 		return false;
 	}
 
@@ -89,94 +104,118 @@ bool UAWeaponContainerComponent::InstantiateWeapon(TSubclassOf<AAWeaponBase> Wea
 	if (GetWeapon(NewWeapon->GetIdentifier()))
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Not adding weapon [%s] as this WeaponContainer already has a weapon with that identifier."), *(NewWeapon->GetIdentifier().GetTagName().ToString()));
-		//TODO Destroy NewWeapon?
+		NewWeapon->SetLifeSpan(1.f);
 		return false;
 	}
 
 	NewWeapon->SetOwningPlayer(OwningCharacter);
 	Weapons.Add(NewWeapon);
 
-	OnWeaponAdded.Broadcast(this, NewWeapon);
+	ClientOnWeaponAdded(NewWeapon); // Only the owner of the weapon needs to update their UI
 
 	return true;
 }
 
-void UAWeaponContainerComponent::OnFireStart()
+void UAWeaponContainerComponent::OnFireStartInput()
 {
-	if (WeaponEquipState == WeaponEquipState::NOT_EQUIPPED)
+	if (RepData_WeaponSwap.WeaponEquipState == WeaponEquipState::NOT_EQUIPPED)
 	{
 		UE_LOG(LogTemp, Error, TEXT("WeaponContainer can't start fire while WeaponEquipState is NOT_EQUIPPED"));
 		return;
 	}
 
-	if (WeaponEquipState == WeaponEquipState::READY && EquippedWeapon)
+	if (!GetOwner()->HasAuthority())
+	{
+		ServerOnFireStartInput();
+	}
+
+	if (RepData_WeaponSwap.WeaponEquipState == WeaponEquipState::READY && EquippedWeapon) // Start firing
 	{
 		EquippedWeapon->StartFire();
 	}
-	else
+	else // Prepare to fire when the swap ends
 	{
-		bShouldFireOnSwapEnd = true;
+		RepData_WeaponSwap.bShouldFireOnSwapEnd = true;
 	}
 }
 
-void UAWeaponContainerComponent::OnFireStop()
+void UAWeaponContainerComponent::ServerOnFireStartInput_Implementation()
 {
-	if (WeaponEquipState == WeaponEquipState::NOT_EQUIPPED)
+	OnFireStartInput();
+}
+
+void UAWeaponContainerComponent::OnFireStopInput()
+{
+	if (RepData_WeaponSwap.WeaponEquipState == WeaponEquipState::NOT_EQUIPPED)
 	{
 		UE_LOG(LogTemp, Error, TEXT("WeaponContainer can't stop fire while WeaponEquipState is NOT_EQUIPPED"));
 		return;
 	}
 
-	if (WeaponEquipState == WeaponEquipState::READY && EquippedWeapon)
+	if (!GetOwner()->HasAuthority())
+	{
+		ServerOnFireStopInput();
+	}
+
+	if (RepData_WeaponSwap.WeaponEquipState == WeaponEquipState::READY && EquippedWeapon) // Start firing locally
 	{
 		EquippedWeapon->StopFire();
 	}
 	else
 	{
-		bShouldFireOnSwapEnd = false;
+		RepData_WeaponSwap.bShouldFireOnSwapEnd = false;
 	}
+}
+
+void UAWeaponContainerComponent::ServerOnFireStopInput_Implementation()
+{
+	OnFireStopInput();
 }
 
 void UAWeaponContainerComponent::ProcessSwapInput(FGameplayTag WeaponIdentifier)
 {
 	// Must wait for the equip to complete before starting a swap to another weapon
-	if (WeaponEquipState == WeaponEquipState::EQUIPPING)
+	if (RepData_WeaponSwap.WeaponEquipState == WeaponEquipState::EQUIPPING)
 	{
 		//UE_LOG(LogTemp, Log, TEXT("Ignoring weapon swap input as a weapon is already being equipped"));
 		return;
 	}
 
 	// Ignore a swap if that weapon is already being swapped to
-	if (WeaponToSwapTo && WeaponToSwapTo->GetIdentifier() == WeaponIdentifier)
+	if (RepData_WeaponSwap.WeaponToSwapTo && RepData_WeaponSwap.WeaponToSwapTo->GetIdentifier() == WeaponIdentifier)
 	{
 		//UE_LOG(LogTemp, Log, TEXT("Ignoring weapon swap input - already swapping to that weapon [%s]"), *(WeaponIdentifier.GetTagName().ToString()));
 		return;
 	}
 
+	if (!GetOwner()->HasAuthority()) // Let client visually start swapping weapon, but tell server to start swap as well
+	{
+		ServerProcessSwapInput(WeaponIdentifier);
+	}
 
 	AAWeaponBase* Weapon = GetWeapon(WeaponIdentifier);
 	if (!Weapon)
 	{
-		UE_LOG(LogTemp, Error, TEXT("Receivied input to swap to [%s], but found no weapon matching that tag"), *(WeaponIdentifier.GetTagName().ToString()) )
+		UE_LOG(LogTemp, Error, TEXT("Receivied input to swap to [%s], but found no weapon matching that tag"), *(WeaponIdentifier.GetTagName().ToString()));
 		return;
 	}
+ 
+	RepData_WeaponSwap.WeaponToSwapTo = Weapon;
 
-	WeaponToSwapTo = Weapon;
-
-	// Don't start a new swap as one is already in progress - simply update target for the current swap
-	if (WeaponEquipState == WeaponEquipState::UNEQUIPPING)
+	// Don't start a new swap as one is already in progress - target for the current swap has simply been updated
+	if (RepData_WeaponSwap.WeaponEquipState == WeaponEquipState::UNEQUIPPING)
 	{
 		UE_LOG(LogTemp, Log, TEXT("A weapon is already being unequipped. WeaponToSwapTo has been updated, but not starting new swap."));
 		return;
-	}	
+	}
 
 	if (EquippedWeapon)
 	{
-		bShouldFireOnSwapEnd = EquippedWeapon->IsFiring();
+		RepData_WeaponSwap.bShouldFireOnSwapEnd = EquippedWeapon->IsFiring();
 
 		if (!EquippedWeapon->IsFiring())
 		{
-			UE_LOG(LogTemp, Log, TEXT("Starting swap immediately"));
+			//UE_LOG(LogTemp, Log, TEXT("Starting swap immediately"));
 			StartWeaponSwap();
 		}
 		else // Wait until EquippedWeapon finishes reloading to swap
@@ -184,40 +223,53 @@ void UAWeaponContainerComponent::ProcessSwapInput(FGameplayTag WeaponIdentifier)
 			const float PreSwapDelaySeconds = EquippedWeapon->GetRemainingFireDelay();
 			EquippedWeapon->StopFire();
 
-			UE_LOG(LogTemp, Log, TEXT("Starting swap in [%f] seconds"), PreSwapDelaySeconds);
+			//UE_LOG(LogTemp, Log, TEXT("Starting swap in [%f] seconds"), PreSwapDelaySeconds);
 
-			WeaponEquipState = WeaponEquipState::WAITING_TO_UNEQUIP;
+			RepData_WeaponSwap.WeaponEquipState = WeaponEquipState::WAITING_TO_UNEQUIP;
 			GetWorld()->GetTimerManager().SetTimer(TimerHandle_WeaponSwap, this, &UAWeaponContainerComponent::StartWeaponSwap, PreSwapDelaySeconds);
 		}
 	}
 	else // Equipping first weapon, ignore unequip delay
 	{
-		WeaponEquipState = WeaponEquipState::EQUIPPING;
+		RepData_WeaponSwap.WeaponEquipState = WeaponEquipState::EQUIPPING;
 		GetWorld()->GetTimerManager().SetTimer(TimerHandle_WeaponSwap, this, &UAWeaponContainerComponent::OnWeaponEquipDelayEnd, WeaponEquipDelaySeconds);
-	}		
+	}
+}
+
+void UAWeaponContainerComponent::ServerProcessSwapInput_Implementation(FGameplayTag WeaponIdentifier)
+{
+	ProcessSwapInput(WeaponIdentifier);
 }
 
 void UAWeaponContainerComponent::StartWeaponSwap()
 {
-	if (WeaponEquipState == WeaponEquipState::UNEQUIPPING || WeaponEquipState == WeaponEquipState::EQUIPPING)
+	if (RepData_WeaponSwap.WeaponEquipState == WeaponEquipState::UNEQUIPPING || RepData_WeaponSwap.WeaponEquipState == WeaponEquipState::EQUIPPING)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Attempted to start weapon swap while already swapping weapon."));
 		return;
 	}
 
-	if (!WeaponToSwapTo)
+	if (!RepData_WeaponSwap.WeaponToSwapTo)
 	{
 		UE_LOG(LogTemp, Error, TEXT("Attempted to StartWeaponSwap() but WeaponToSwapTo was null"));
 		return;
 	}
 
-	WeaponEquipState = WeaponEquipState::UNEQUIPPING;
-	GetWorld()->GetTimerManager().SetTimer(TimerHandle_WeaponSwap, this, &UAWeaponContainerComponent::OnWeaponUnequipDelayEnd, WeaponUnequipDelaySeconds);
+	if (RepData_WeaponSwap.WeaponEquipState == WeaponEquipState::NOT_EQUIPPED) // First weapon, skip unequip delay
+	{
+		RepData_WeaponSwap.WeaponEquipState = WeaponEquipState::EQUIPPING;
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle_WeaponSwap, this, &UAWeaponContainerComponent::OnWeaponEquipDelayEnd, WeaponEquipDelaySeconds);
+	}
+	else // Standard 
+	{
+		RepData_WeaponSwap.WeaponEquipState = WeaponEquipState::UNEQUIPPING;
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle_WeaponSwap, this, &UAWeaponContainerComponent::OnWeaponUnequipDelayEnd, WeaponUnequipDelaySeconds);
+	}	
 }
 
 void UAWeaponContainerComponent::OnWeaponUnequipDelayEnd()
 {	
-	if (WeaponEquipState != WeaponEquipState::UNEQUIPPING)
+	if (RepData_WeaponSwap.WeaponEquipState != WeaponEquipState::UNEQUIPPING)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("OnWeaponUnequipDelayEnd() called, but WeaponEquipState wasn't UNEQUIPPING"));
 		return;
@@ -226,61 +278,69 @@ void UAWeaponContainerComponent::OnWeaponUnequipDelayEnd()
 	if (EquippedWeapon)
 	{
 		EquippedWeapon->UnequipWeapon();
+
+		// Don't set EquippedWeapon to null here as this is the weapon that should still be dropped if the player dies before the equip finishes
 	}
 
-	WeaponEquipState = WeaponEquipState::EQUIPPING;
+	RepData_WeaponSwap.WeaponEquipState = WeaponEquipState::EQUIPPING;
 
 	GetWorld()->GetTimerManager().SetTimer(TimerHandle_WeaponSwap, this, &UAWeaponContainerComponent::OnWeaponEquipDelayEnd, WeaponEquipDelaySeconds);
 }
 
 void UAWeaponContainerComponent::OnWeaponEquipDelayEnd()
 {
-	if (WeaponEquipState != WeaponEquipState::EQUIPPING)
+	if (RepData_WeaponSwap.WeaponEquipState != WeaponEquipState::EQUIPPING)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("OnWeaponEquipDelayEnd() called, but WeaponEquipState wasn't EQUIPPING"));
 		return;
 	}
 
-	if (!WeaponToSwapTo)
+	if (!RepData_WeaponSwap.WeaponToSwapTo)
 	{
 		UE_LOG(LogTemp, Error, TEXT("OnWeaponEquipDelayEnd() callled, but WeaponToSwapTo was null"));
 		return;
 	}	
 
-	WeaponToSwapTo->EquipWeapon();
+	RepData_WeaponSwap.WeaponToSwapTo->EquipWeapon();
 
-	EquippedWeapon = WeaponToSwapTo;
-	WeaponToSwapTo = nullptr;
+	EquippedWeapon = RepData_WeaponSwap.WeaponToSwapTo;
+	RepData_WeaponSwap.WeaponToSwapTo = nullptr;
 
-	if (bShouldFireOnSwapEnd)
+	if (RepData_WeaponSwap.bShouldFireOnSwapEnd)
 	{
 		EquippedWeapon->StartFire();
 	}
 
-	WeaponEquipState = WeaponEquipState::READY;
+	RepData_WeaponSwap.WeaponEquipState = WeaponEquipState::READY;
+}
+
+/*
+ * Used to update clients who don't own this component.
+ * 
+ * 
+ */
+void UAWeaponContainerComponent::OnRep_WeaponSwap()
+{
+	
+
+
+
+
+
 }
 
 void UAWeaponContainerComponent::EquipDefaultWeapon()
 {
 	if (Weapons.IsEmpty())
 	{
+		UE_LOG(LogTemp, Warning, TEXT("Failed to equip default weapon- Weapons was empty."));
 		return;
 	}
 
 	AAWeaponBase* DefaultWeapon = Weapons[0];
 	if (DefaultWeapon)
 	{
-		WeaponToSwapTo = DefaultWeapon;
-
-		if (WeaponEquipState == WeaponEquipState::NOT_EQUIPPED) // Equipping first weapon. Skip unequip time.
-		{
-			WeaponEquipState = WeaponEquipState::EQUIPPING;
-			GetWorld()->GetTimerManager().SetTimer(TimerHandle_WeaponSwap, this, &UAWeaponContainerComponent::OnWeaponEquipDelayEnd, WeaponEquipDelaySeconds);
-		}
-		else
-		{
-			StartWeaponSwap();
-		}		
+		ProcessSwapInput(DefaultWeapon->GetIdentifier());		
 	}	
 }
 
@@ -299,6 +359,11 @@ void UAWeaponContainerComponent::OnEquipRailInput()
 	ProcessSwapInput(RailGameplayTag);
 }
 
+/*
+ * TODO - This is obviously O(n), which is far from ideal. 
+ * Need to test actual time of O(n) approach (given n is at most 8), versus setting
+ * up a TMap for lookups, while also maintaining TArray for replication.
+ */
 AAWeaponBase* UAWeaponContainerComponent::GetWeapon(const FGameplayTag WeaponIdentifier) const
 {
 	for (AAWeaponBase* Weapon : Weapons)
@@ -310,4 +375,19 @@ AAWeaponBase* UAWeaponContainerComponent::GetWeapon(const FGameplayTag WeaponIde
 	}
 
 	return nullptr;
+}
+
+void UAWeaponContainerComponent::ClientOnWeaponAdded_Implementation(AAWeaponBase* NewWeapon)
+{
+	UE_LOG(LogTemp, Log, TEXT("CLIENT ON WEAPON ADDED CALLED"));
+	OnWeaponAdded.Broadcast(this, NewWeapon);
+}
+
+void UAWeaponContainerComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(UAWeaponContainerComponent, Weapons);
+	DOREPLIFETIME(UAWeaponContainerComponent, EquippedWeapon);
+	DOREPLIFETIME(UAWeaponContainerComponent, RepData_WeaponSwap);
 }
