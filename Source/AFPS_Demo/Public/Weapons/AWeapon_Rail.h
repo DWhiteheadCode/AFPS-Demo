@@ -27,7 +27,10 @@ protected:
 	float Range = 10000.f;
 
 	UFUNCTION()
-	TArray<UAStackComponent*> GetStackComponentsInLine(const FVector StartPos, const FVector EndPos) const;
+	TArray<FHitResult> PerformTrace();
+
+	UFUNCTION()
+	TArray<UAStackComponent*> GetStackComponentsFromHitResults(const TArray<FHitResult> HitResults) const;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Trace")
 	TEnumAsByte<ECollisionChannel> TraceChannel;

@@ -12,12 +12,6 @@ AAWeapon_Rail::AAWeapon_Rail()
 
 void AAWeapon_Rail::Fire_Implementation()
 {
-	if (!OwningPlayer)
-	{
-		UE_LOG(LogTemp, Error, TEXT("Rail [%s] tried to fire, but OwningPlayer was null."), *GetNameSafe(this));
-		return;
-	}
-
 	if (!CanFire()) // WeaponContainerComponent should have checked CanFire() before calling Fire().
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Tried to fire [%s], but CanFire() returned false"), *GetNameSafe(this));
@@ -26,16 +20,11 @@ void AAWeapon_Rail::Fire_Implementation()
 
 	Super::Fire_Implementation();
 
-	const FVector StartPos = OwningPlayer->GetPawnViewLocation();
-	const FRotator FiringDirection = OwningPlayer->GetControlRotation();
-
-	const FVector EndPos = StartPos + (FiringDirection.Vector() * Range);
-
-	DrawDebugLine(GetWorld(), StartPos, EndPos, FColor::White, false, FireDelay, 0, 1.f);
+	const TArray<FHitResult> HitResults = PerformTrace(); // Perform trace even on clients to show rail trail
 
 	if (HasAuthority())
 	{
-		const TArray<UAStackComponent*> HitStackComponents = GetStackComponentsInLine(StartPos, EndPos);
+		const TArray<UAStackComponent*> HitStackComponents = GetStackComponentsFromHitResults(HitResults);
 
 		for (UAStackComponent* StackComp : HitStackComponents)
 		{
@@ -47,36 +36,52 @@ void AAWeapon_Rail::Fire_Implementation()
 	}
 }
 
-TArray<UAStackComponent*> AAWeapon_Rail::GetStackComponentsInLine(const FVector StartPos, const FVector EndPos) const
+TArray<FHitResult> AAWeapon_Rail::PerformTrace()
 {
-	if (!HasAuthority())
+	if (!OwningPlayer)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Client Rail attempted to get ComponentsToDamage. Returning empty array."));
-		return TArray<UAStackComponent*>();
+		UE_LOG(LogTemp, Error, TEXT("Rail [%s] tried to perform trace, but OwningPlayer was null."), *GetNameSafe(this));
+		return TArray<FHitResult>();
 	}
+
+	const FVector StartPos = OwningPlayer->GetPawnViewLocation();
+	const FRotator FiringDirection = OwningPlayer->GetControlRotation();
+
+	FVector EndPos = StartPos + (FiringDirection.Vector() * Range);
 
 	FCollisionQueryParams QueryParams;
-	
-	QueryParams.AddIgnoredActor(this);
 
-	if (OwningPlayer)
-	{
-		QueryParams.AddIgnoredActor(OwningPlayer);
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Rail [%s] tried to GetComponentsToDamage(), but OwningPlayer was null so they can't be ignored"), *GetNameSafe(this));
-	}
+	QueryParams.AddIgnoredActor(this);
+	QueryParams.AddIgnoredActor(OwningPlayer);
 
 	TArray<FHitResult> HitResults;
 	GetWorld()->LineTraceMultiByChannel(HitResults, StartPos, EndPos, TraceChannel, QueryParams);
 
-	TArray<UAStackComponent*> ComponentsToDamage;
+	// Update EndPos to draw debug line
+	if (HitResults.Last().bBlockingHit)
+	{
+		EndPos = HitResults.Last().ImpactPoint;
+	}
+	
+	DrawDebugLine(GetWorld(), StartPos, EndPos, FColor::Green, false, FireDelay, 0, 1.f);
+
+	return HitResults;
+}
+
+TArray<UAStackComponent*> AAWeapon_Rail::GetStackComponentsFromHitResults(const TArray<FHitResult> HitResults) const
+{
+	if (!HasAuthority())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Client tried to GetStackComponentsFromHitResults() in [%s]. Returning empty array."), *GetNameSafe(this));
+		return TArray<UAStackComponent*>();
+	}
+
+	TArray<UAStackComponent*> StackComponents;
 
 	for (const FHitResult& Hit : HitResults)
 	{
 		FColor DebugColor = FColor::Blue;
-		
+
 		const AActor* HitActor = Hit.GetActor();
 		if (HitActor)
 		{
@@ -84,13 +89,13 @@ TArray<UAStackComponent*> AAWeapon_Rail::GetStackComponentsInLine(const FVector 
 
 			if (StackComp)
 			{
-				ComponentsToDamage.Add(StackComp);
+				StackComponents.Add(StackComp);
 				DebugColor = FColor::Red;
 			}
 		}
 
 		DrawDebugSphere(GetWorld(), Hit.ImpactPoint, 10.f, 16, DebugColor, false, 3.f, 0, 1.f);
 	}
-	
-	return ComponentsToDamage;
+
+	return StackComponents;
 }
