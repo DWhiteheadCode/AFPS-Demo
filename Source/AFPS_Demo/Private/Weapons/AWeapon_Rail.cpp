@@ -12,7 +12,13 @@ AAWeapon_Rail::AAWeapon_Rail()
 
 void AAWeapon_Rail::Fire_Implementation()
 {
-	if (!CanFire()) // Weapon can't fire (typically out of ammo)
+	if (!OwningPlayer)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Rail [%s] tried to fire, but OwningPlayer was null."), *GetNameSafe(this));
+		return;
+	}
+
+	if (!CanFire()) // WeaponContainerComponent should have checked CanFire() before calling Fire().
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Tried to fire [%s], but CanFire() returned false"), *GetNameSafe(this));
 		return;
@@ -20,33 +26,47 @@ void AAWeapon_Rail::Fire_Implementation()
 
 	Super::Fire_Implementation();
 
-	const TArray<UAStackComponent*> HitStackComponents = GetComponentsToDamage();
-
-	for (UAStackComponent* StackComp : HitStackComponents)
-	{
-		if (StackComp)
-		{
-			StackComp->ApplyDamage(Damage, OwningPlayer);
-		}
-	}
-}
-
-TArray<UAStackComponent*> AAWeapon_Rail::GetComponentsToDamage() const
-{
-	if (!OwningPlayer)
-	{
-		UE_LOG(LogTemp, Error, TEXT("[%s] tried to GetComponentsToDamage(), but OwningPlayer was null"), *GetNameSafe(this));
-		return TArray<UAStackComponent*>();
-	}
-
 	const FVector StartPos = OwningPlayer->GetPawnViewLocation();
 	const FRotator FiringDirection = OwningPlayer->GetControlRotation();
 
 	const FVector EndPos = StartPos + (FiringDirection.Vector() * Range);
 
+	DrawDebugLine(GetWorld(), StartPos, EndPos, FColor::White, false, FireDelay, 0, 1.f);
+
+	if (HasAuthority())
+	{
+		const TArray<UAStackComponent*> HitStackComponents = GetStackComponentsInLine(StartPos, EndPos);
+
+		for (UAStackComponent* StackComp : HitStackComponents)
+		{
+			if (StackComp)
+			{
+				StackComp->ApplyDamage(Damage, OwningPlayer);
+			}
+		}
+	}
+}
+
+TArray<UAStackComponent*> AAWeapon_Rail::GetStackComponentsInLine(const FVector StartPos, const FVector EndPos) const
+{
+	if (!HasAuthority())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Client Rail attempted to get ComponentsToDamage. Returning empty array."));
+		return TArray<UAStackComponent*>();
+	}
+
 	FCollisionQueryParams QueryParams;
-	QueryParams.AddIgnoredActor(OwningPlayer);
+	
 	QueryParams.AddIgnoredActor(this);
+
+	if (OwningPlayer)
+	{
+		QueryParams.AddIgnoredActor(OwningPlayer);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Rail [%s] tried to GetComponentsToDamage(), but OwningPlayer was null so they can't be ignored"), *GetNameSafe(this));
+	}
 
 	TArray<FHitResult> HitResults;
 	GetWorld()->LineTraceMultiByChannel(HitResults, StartPos, EndPos, TraceChannel, QueryParams);
