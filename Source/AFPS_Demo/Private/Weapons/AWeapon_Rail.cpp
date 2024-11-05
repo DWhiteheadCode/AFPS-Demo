@@ -58,7 +58,7 @@ TArray<FHitResult> AAWeapon_Rail::PerformTrace()
 	GetWorld()->LineTraceMultiByChannel(HitResults, StartPos, EndPos, TraceChannel, QueryParams);
 
 	// Update EndPos to draw debug line
-	if (HitResults.Last().bBlockingHit)
+	if (HitResults.Num() > 0 && HitResults.Last().bBlockingHit)
 	{
 		EndPos = HitResults.Last().ImpactPoint;
 	}
