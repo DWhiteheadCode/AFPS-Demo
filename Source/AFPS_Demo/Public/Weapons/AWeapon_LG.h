@@ -27,4 +27,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Trace")
 	TEnumAsByte<ECollisionChannel> TraceChannel;
 
+	UFUNCTION()
+	FHitResult PerformTrace();
+
 };

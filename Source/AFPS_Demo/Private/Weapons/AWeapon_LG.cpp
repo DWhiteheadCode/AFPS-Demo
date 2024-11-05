@@ -25,21 +25,11 @@ void AAWeapon_LG::Fire_Implementation()
 	}
 
 	Super::Fire_Implementation();
-	
-	const FVector StartPos = OwningPlayer->GetPawnViewLocation();
-	const FRotator FiringDirection = OwningPlayer->GetControlRotation();
 
-	const FVector EndPos = StartPos + (FiringDirection.Vector() * Range);
+	FHitResult HitResult = PerformTrace();
 
 	if (HasAuthority())
 	{
-		FCollisionQueryParams QueryParams;
-		QueryParams.AddIgnoredActor(OwningPlayer);
-		QueryParams.AddIgnoredActor(this);
-
-		FHitResult HitResult;
-		GetWorld()->LineTraceSingleByChannel(HitResult, StartPos, EndPos, TraceChannel, QueryParams);
-
 		const AActor* HitActor = HitResult.GetActor();
 		if (HitActor)
 		{
@@ -50,20 +40,37 @@ void AAWeapon_LG::Fire_Implementation()
 				StackComp->ApplyDamage(Damage, OwningPlayer);
 			}
 		}
+	}
+}
 
-		if (HitResult.bBlockingHit)
-		{
-			DrawDebugLine(GetWorld(), StartPos, HitResult.ImpactPoint, FColor::Red, false, FireDelay, 0, 1.f);
-		}
-		else
-		{
-			DrawDebugLine(GetWorld(), StartPos, EndPos, FColor::Blue, false, FireDelay, 0, 1.f);
-		}
-	}	
-	else // Show client prediction of the shot
+FHitResult AAWeapon_LG::PerformTrace()
+{
+	if (!OwningPlayer)
 	{
-		DrawDebugLine(GetWorld(), StartPos, EndPos, FColor::White, false, FireDelay, 0, 1.f);
+		UE_LOG(LogTemp, Error, TEXT("LG [%s] tried to perform trace, but OwningPlayer was null."), *GetNameSafe(this));
+		return FHitResult();
 	}
 
-	
+	const FVector StartPos = OwningPlayer->GetPawnViewLocation();
+	const FRotator FiringDirection = OwningPlayer->GetControlRotation();
+
+	FVector EndPos = StartPos + (FiringDirection.Vector() * Range);
+
+	FCollisionQueryParams QueryParams;
+
+	QueryParams.AddIgnoredActor(this);
+	QueryParams.AddIgnoredActor(OwningPlayer);
+
+	FHitResult HitResult;
+	GetWorld()->LineTraceSingleByChannel(HitResult, StartPos, EndPos, TraceChannel, QueryParams);
+
+	// Update EndPos to draw debug line
+	if (HitResult.bBlockingHit)
+	{
+		EndPos = HitResult.ImpactPoint;
+	}
+
+	DrawDebugLine(GetWorld(), StartPos, EndPos, FColor::Blue, false, FireDelay, 0, 1.f);
+
+	return HitResult;
 }
