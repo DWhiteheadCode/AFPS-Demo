@@ -54,8 +54,8 @@ public:
 	void StopFire();
 
 	// Called when the weapon actually fires (i.e. each time a bullet/projectile is shot)
-	UFUNCTION(BlueprintNativeEvent)
-	void Fire();
+	UFUNCTION()
+	virtual void Fire();
 
 	UFUNCTION()
 	bool CanFire() const;

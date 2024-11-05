@@ -15,7 +15,7 @@ class AFPS_DEMO_API AAWeapon_LG : public AAWeaponBase
 public:
 	AAWeapon_LG();
 
-	void Fire_Implementation() override;
+	void Fire() override;
 
 protected:
 	UPROPERTY(EditAnywhere, Category = "Damage")

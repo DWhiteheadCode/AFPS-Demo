@@ -17,7 +17,7 @@ class AFPS_DEMO_API AAWeapon_Rail : public AAWeaponBase
 public:
 	AAWeapon_Rail();
 
-	void Fire_Implementation() override;
+	void Fire() override;
 
 protected:
 	UPROPERTY(EditAnywhere, Category="Damage")

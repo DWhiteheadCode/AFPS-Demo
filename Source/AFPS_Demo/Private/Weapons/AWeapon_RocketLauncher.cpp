@@ -10,7 +10,7 @@ AAWeapon_RocketLauncher::AAWeapon_RocketLauncher()
 	FireDelay = 0.8f;
 }
 
-void AAWeapon_RocketLauncher::Fire_Implementation()
+void AAWeapon_RocketLauncher::Fire()
 {
 	if (!CanFire())
 	{
@@ -30,7 +30,7 @@ void AAWeapon_RocketLauncher::Fire_Implementation()
 		return;
 	}	
 
-	Super::Fire_Implementation();
+	Super::Fire();
 
 	if (HasAuthority())
 	{

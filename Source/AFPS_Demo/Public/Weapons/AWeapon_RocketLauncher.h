@@ -15,7 +15,7 @@ class AFPS_DEMO_API AAWeapon_RocketLauncher : public AAWeaponBase
 public:
 	AAWeapon_RocketLauncher();
 
-	void Fire_Implementation() override;
+	void Fire() override;
 
 protected:
 	UPROPERTY(EditAnywhere, Category="Projectile")

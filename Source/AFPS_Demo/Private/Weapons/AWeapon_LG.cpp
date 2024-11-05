@@ -10,7 +10,7 @@ AAWeapon_LG::AAWeapon_LG()
 	FireDelay = 0.055f;
 }
 
-void AAWeapon_LG::Fire_Implementation()
+void AAWeapon_LG::Fire()
 {
 	if (!CanFire())
 	{
@@ -24,7 +24,7 @@ void AAWeapon_LG::Fire_Implementation()
 		return;
 	}
 
-	Super::Fire_Implementation();
+	Super::Fire();
 
 	FHitResult HitResult = PerformTrace();
 

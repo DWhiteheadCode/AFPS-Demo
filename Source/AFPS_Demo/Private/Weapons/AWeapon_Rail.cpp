@@ -10,7 +10,7 @@ AAWeapon_Rail::AAWeapon_Rail()
 	FireDelay = 1.7f;
 }
 
-void AAWeapon_Rail::Fire_Implementation()
+void AAWeapon_Rail::Fire()
 {
 	if (!CanFire()) // WeaponContainerComponent should have checked CanFire() before calling Fire().
 	{
@@ -18,7 +18,7 @@ void AAWeapon_Rail::Fire_Implementation()
 		return;
 	}
 
-	Super::Fire_Implementation();
+	Super::Fire();
 
 	const TArray<FHitResult> HitResults = PerformTrace(); // Perform trace even on clients to show rail trail
 
