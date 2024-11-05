@@ -31,30 +31,39 @@ void AAWeapon_LG::Fire_Implementation()
 
 	const FVector EndPos = StartPos + (FiringDirection.Vector() * Range);
 
-	FCollisionQueryParams QueryParams;
-	QueryParams.AddIgnoredActor(OwningPlayer);
-	QueryParams.AddIgnoredActor(this);
-
-	FHitResult HitResult;
-	GetWorld()->LineTraceSingleByChannel(HitResult, StartPos, EndPos, TraceChannel, QueryParams);
-
-	const AActor* HitActor = HitResult.GetActor();
-	if (HitActor)
+	if (HasAuthority())
 	{
-		UAStackComponent* StackComp = Cast<UAStackComponent>(HitActor->GetComponentByClass(UAStackComponent::StaticClass()));
+		FCollisionQueryParams QueryParams;
+		QueryParams.AddIgnoredActor(OwningPlayer);
+		QueryParams.AddIgnoredActor(this);
 
-		if (StackComp)
+		FHitResult HitResult;
+		GetWorld()->LineTraceSingleByChannel(HitResult, StartPos, EndPos, TraceChannel, QueryParams);
+
+		const AActor* HitActor = HitResult.GetActor();
+		if (HitActor)
 		{
-			StackComp->ApplyDamage(Damage, OwningPlayer);
+			UAStackComponent* StackComp = Cast<UAStackComponent>(HitActor->GetComponentByClass(UAStackComponent::StaticClass()));
+
+			if (StackComp)
+			{
+				StackComp->ApplyDamage(Damage, OwningPlayer);
+			}
 		}
+
+		if (HitResult.bBlockingHit)
+		{
+			DrawDebugLine(GetWorld(), StartPos, HitResult.ImpactPoint, FColor::Red, false, FireDelay, 0, 1.f);
+		}
+		else
+		{
+			DrawDebugLine(GetWorld(), StartPos, EndPos, FColor::Blue, false, FireDelay, 0, 1.f);
+		}
+	}	
+	else // Show client prediction of the shot
+	{
+		DrawDebugLine(GetWorld(), StartPos, EndPos, FColor::White, false, FireDelay, 0, 1.f);
 	}
 
-	if (HitResult.bBlockingHit)
-	{
-		DrawDebugLine(GetWorld(), StartPos, HitResult.ImpactPoint, FColor::Red, false, FireDelay, 0, 1.f);
-	}
-	else
-	{
-		DrawDebugLine(GetWorld(), StartPos, EndPos, FColor::Blue, false, FireDelay, 0, 1.f);
-	}
+	
 }
