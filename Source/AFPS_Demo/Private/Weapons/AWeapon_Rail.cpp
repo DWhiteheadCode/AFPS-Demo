@@ -87,13 +87,15 @@ TArray<UAStackComponent*> AAWeapon_Rail::GetStackComponentsFromHitResults(const 
 	}
 
 	TArray<UAStackComponent*> StackComponents;
+	TArray<AActor*> HitActors; // Track actors that were hit so the same actor can't be hit multiple times with the same shot.
 
-	for (const FHitResult& Hit : HitResults)
+	for (const FHitResult& HitResult : HitResults)
 	{
 		FColor DebugColor = FColor::Blue;
 
-		const AActor* HitActor = Hit.GetActor();
-		if (HitActor)
+		AActor* HitActor = HitResult.GetActor();
+
+		if (HitActor && !HitActors.Contains(HitActor))
 		{
 			UAStackComponent* StackComp = Cast<UAStackComponent>(HitActor->GetComponentByClass(UAStackComponent::StaticClass()));
 
@@ -102,9 +104,11 @@ TArray<UAStackComponent*> AAWeapon_Rail::GetStackComponentsFromHitResults(const 
 				StackComponents.Add(StackComp);
 				DebugColor = FColor::Red;
 			}
-		}
 
-		DrawDebugSphere(GetWorld(), Hit.ImpactPoint, 10.f, 16, DebugColor, false, 3.f, 0, 1.f);
+			HitActors.Add(HitActor);
+
+			DrawDebugSphere(GetWorld(), HitResult.ImpactPoint, 10.f, 16, DebugColor, false, 3.f, 0, 1.f);
+		}		
 	}
 
 	return StackComponents;
