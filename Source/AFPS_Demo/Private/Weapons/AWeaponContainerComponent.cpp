@@ -312,21 +312,7 @@ void UAWeaponContainerComponent::OnWeaponEquipDelayEnd()
 	}
 
 	RepData_WeaponSwap.WeaponEquipState = WeaponEquipState::READY;
-}
-
-/*
- * Used to update clients who don't own this component.
- * 
- * 
- */
-void UAWeaponContainerComponent::OnRep_WeaponSwap()
-{
-	
-
-
-
-
-
+		
 }
 
 void UAWeaponContainerComponent::EquipDefaultWeapon()

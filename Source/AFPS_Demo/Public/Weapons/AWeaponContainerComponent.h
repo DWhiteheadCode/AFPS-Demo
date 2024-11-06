@@ -96,11 +96,8 @@ protected:
 	UFUNCTION()
 	void OnWeaponEquipDelayEnd();
 
-	UPROPERTY(ReplicatedUsing="OnRep_WeaponSwap")
+	UPROPERTY(Replicated)
 	FWeaponSwapRepData RepData_WeaponSwap;
-
-	UFUNCTION()
-	void OnRep_WeaponSwap();
 
 	FTimerHandle TimerHandle_WeaponSwap;
 
