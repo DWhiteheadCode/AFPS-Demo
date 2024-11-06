@@ -181,6 +181,15 @@ void UAWeaponContainerComponent::ProcessSwapInput(FGameplayTag WeaponIdentifier)
 		return;
 	}
 
+	// If a swap isn't already occuring, ignore a swap to the EquippedWeapon
+	if (RepData_WeaponSwap.WeaponEquipState == WeaponEquipState::READY)
+	{
+		if (EquippedWeapon && EquippedWeapon->GetIdentifier() == WeaponIdentifier)
+		{
+			return;
+		}
+	}
+
 	// Ignore a swap if that weapon is already being swapped to
 	if (RepData_WeaponSwap.WeaponToSwapTo && RepData_WeaponSwap.WeaponToSwapTo->GetIdentifier() == WeaponIdentifier)
 	{
@@ -203,7 +212,7 @@ void UAWeaponContainerComponent::ProcessSwapInput(FGameplayTag WeaponIdentifier)
 	RepData_WeaponSwap.WeaponToSwapTo = Weapon;
 
 	// Don't start a new swap as one is already in progress - target for the current swap has simply been updated
-	if (RepData_WeaponSwap.WeaponEquipState == WeaponEquipState::UNEQUIPPING)
+	if (RepData_WeaponSwap.WeaponEquipState == WeaponEquipState::UNEQUIPPING || RepData_WeaponSwap.WeaponEquipState == WeaponEquipState::WAITING_TO_UNEQUIP)
 	{
 		UE_LOG(LogTemp, Log, TEXT("A weapon is already being unequipped. WeaponToSwapTo has been updated, but not starting new swap."));
 		return;
@@ -243,6 +252,8 @@ void UAWeaponContainerComponent::ServerProcessSwapInput_Implementation(FGameplay
 
 void UAWeaponContainerComponent::StartWeaponSwap()
 {
+	LogOnScreen(this, FString("StartWeaponSwap()"));
+
 	if (RepData_WeaponSwap.WeaponEquipState == WeaponEquipState::UNEQUIPPING || RepData_WeaponSwap.WeaponEquipState == WeaponEquipState::EQUIPPING)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Attempted to start weapon swap while already swapping weapon."));
@@ -251,11 +262,23 @@ void UAWeaponContainerComponent::StartWeaponSwap()
 
 	if (!RepData_WeaponSwap.WeaponToSwapTo)
 	{
-		UE_LOG(LogTemp, Error, TEXT("Attempted to StartWeaponSwap() but WeaponToSwapTo was null"));
+		LogOnScreen(this, FString("Attempted to StartWeaponSwap, but WeaponToSwapTo was null"));
+		//UE_LOG(LogTemp, Error, TEXT("Attempted to StartWeaponSwap() but WeaponToSwapTo was null"));
 		return;
 	}
 
-	if (RepData_WeaponSwap.WeaponEquipState == WeaponEquipState::NOT_EQUIPPED) // First weapon, skip unequip delay
+	// Player started a swap, but chose to stay with EquippedWeapon before the swap started (e.g. while it was reloading)
+	if (EquippedWeapon == RepData_WeaponSwap.WeaponToSwapTo)
+	{
+		LogOnScreen(this, FString("Cancelling swap before it starts"));
+		//UE_LOG(LogTemp, Log, TEXT("Cancelling swap before it starts as WeaponToSwapTo == EquippedWeapon"));
+		RepData_WeaponSwap.WeaponEquipState = WeaponEquipState::READY;
+		RepData_WeaponSwap.WeaponToSwapTo = nullptr;
+		return;
+	}
+
+	// First weapon, skip unequip delay
+	if (RepData_WeaponSwap.WeaponEquipState == WeaponEquipState::NOT_EQUIPPED) 
 	{
 		RepData_WeaponSwap.WeaponEquipState = WeaponEquipState::EQUIPPING;
 		GetWorld()->GetTimerManager().SetTimer(TimerHandle_WeaponSwap, this, &UAWeaponContainerComponent::OnWeaponEquipDelayEnd, WeaponEquipDelaySeconds);
@@ -278,7 +301,6 @@ void UAWeaponContainerComponent::OnWeaponUnequipDelayEnd()
 	if (EquippedWeapon)
 	{
 		EquippedWeapon->UnequipWeapon();
-
 		// Don't set EquippedWeapon to null here as this is the weapon that should still be dropped if the player dies before the equip finishes
 	}
 
@@ -312,7 +334,6 @@ void UAWeaponContainerComponent::OnWeaponEquipDelayEnd()
 	}
 
 	RepData_WeaponSwap.WeaponEquipState = WeaponEquipState::READY;
-		
 }
 
 void UAWeaponContainerComponent::EquipDefaultWeapon()
@@ -365,7 +386,7 @@ AAWeaponBase* UAWeaponContainerComponent::GetWeapon(const FGameplayTag WeaponIde
 
 void UAWeaponContainerComponent::ClientOnWeaponAdded_Implementation(AAWeaponBase* NewWeapon)
 {
-	UE_LOG(LogTemp, Log, TEXT("CLIENT ON WEAPON ADDED CALLED"));
+	//LogOnScreen(this, FString("ClientOnWeaponAdded()"));
 	OnWeaponAdded.Broadcast(this, NewWeapon);
 }
 
