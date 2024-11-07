@@ -252,8 +252,6 @@ void UAWeaponContainerComponent::ServerProcessSwapInput_Implementation(FGameplay
 
 void UAWeaponContainerComponent::StartWeaponSwap()
 {
-	LogOnScreen(this, FString("StartWeaponSwap()"));
-
 	if (RepData_WeaponSwap.WeaponEquipState == WeaponEquipState::UNEQUIPPING || RepData_WeaponSwap.WeaponEquipState == WeaponEquipState::EQUIPPING)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Attempted to start weapon swap while already swapping weapon."));
