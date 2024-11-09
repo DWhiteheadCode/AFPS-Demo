@@ -13,6 +13,7 @@ class UInputMappingContext;
 class AAWeaponBase;
 class AAPlayerCharacter;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponsReplicated, UAWeaponContainerComponent*, OwningComp); 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnWeaponAdded, UAWeaponContainerComponent*, OwningComp, AAWeaponBase*, Weapon);
 
 UENUM(BlueprintType)
@@ -54,6 +55,9 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnWeaponAdded OnWeaponAdded;
 
+	UPROPERTY(BlueprintAssignable)
+	FOnWeaponsReplicated OnWeaponsReplicated;
+
 	UFUNCTION(Client, Unreliable)
 	void ClientOnWeaponAdded(AAWeaponBase* NewWeapon);
 
@@ -68,8 +72,11 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Weapons")
 	TArray<TSubclassOf<AAWeaponBase>> DefaultWeapons;
 		
-	UPROPERTY(BlueprintReadOnly, Replicated)
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing="OnRep_Weapons")
 	TArray<TObjectPtr<AAWeaponBase>> Weapons;
+
+	UFUNCTION()
+	void OnRep_Weapons();
 
 	UPROPERTY(Replicated)
 	TObjectPtr<AAWeaponBase> EquippedWeapon;

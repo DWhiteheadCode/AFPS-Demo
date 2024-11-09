@@ -72,6 +72,11 @@ void UAWeaponContainerComponent::SetupWeaponBindings()
 	}
 }
 
+void UAWeaponContainerComponent::OnRep_Weapons()
+{
+	OnWeaponsReplicated.Broadcast(this);
+}
+
 bool UAWeaponContainerComponent::InstantiateWeapon(TSubclassOf<AAWeaponBase> WeaponClass)
 {
 	if (!OwningCharacter)
