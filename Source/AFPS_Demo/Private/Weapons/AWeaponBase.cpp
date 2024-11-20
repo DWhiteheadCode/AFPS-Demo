@@ -6,6 +6,7 @@
 #include "Sound/SoundCue.h"
 #include "Components/AudioComponent.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 #include "APlayerCharacter.h"
 
@@ -18,10 +19,6 @@ AAWeaponBase::AAWeaponBase()
 	MeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	RootComponent = MeshComp;
-
-	AudioComp = CreateDefaultSubobject<UAudioComponent>("AudioComp");
-	AudioComp->bAutoActivate = false;
-	AudioComp->SetupAttachment(RootComponent);
 
 	bReplicates = true;
 }
@@ -184,9 +181,9 @@ void AAWeaponBase::Fire()
 		ClientAmmoChanged(Ammo, Ammo + 1);
 	}
 
-	if (AudioComp)
+	if (FireSound)
 	{
-		AudioComp->Play();
+		UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetActorLocation());
 	}	
 }
 
