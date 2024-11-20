@@ -7,6 +7,7 @@
 class UStaticMeshComponent;
 class UProjectileMovementComponent;
 class USphereComponent;
+class USoundCue;
 
 class UAStackComponent;
 
@@ -31,9 +32,13 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	TObjectPtr<UProjectileMovementComponent> ProjectileMovementComp;
 
+
 	// DETONATION ----------------------------------------------------------
 	UFUNCTION()
 	void Detonate();
+
+	UPROPERTY(EditDefaultsOnly, Category = "Sound")
+	USoundCue* DetonationSound;
 
 	// COLLISION -----------------------------------------------------------
 	UPROPERTY(EditAnywhere, Category = "Collision")
