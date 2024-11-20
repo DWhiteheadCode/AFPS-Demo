@@ -15,7 +15,7 @@ class AFPS_DEMO_API AAWeapon_LG : public AAWeaponBase
 public:
 	AAWeapon_LG();
 
-	void Fire_Implementation() override;
+	void Fire() override;
 
 protected:
 	UPROPERTY(EditAnywhere, Category = "Damage")
@@ -26,5 +26,11 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Trace")
 	TEnumAsByte<ECollisionChannel> TraceChannel;
+
+	UFUNCTION()
+	FHitResult PerformTrace();
+
+	UFUNCTION(NetMulticast, Unreliable)
+	void MulticastDrawBeam(const FVector Start, const FVector End);
 
 };

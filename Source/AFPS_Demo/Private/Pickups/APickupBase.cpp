@@ -2,6 +2,7 @@
 
 #include "Components/StaticMeshComponent.h"
 #include "Components/SphereComponent.h"
+#include "Net/UnrealNetwork.h"
 
 AAPickupBase::AAPickupBase()
 {
@@ -14,6 +15,8 @@ AAPickupBase::AAPickupBase()
 	MeshComp = CreateDefaultSubobject<UStaticMeshComponent>("MeshComp");
 	MeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	MeshComp->SetupAttachment(RootComponent);
+
+	bReplicates = true;
 }
 
 void AAPickupBase::PostInitializeComponents()
@@ -59,8 +62,20 @@ void AAPickupBase::UpdatePickupState()
 	MeshComp->SetVisibility(!bIsOnCooldown, true);
 }
 
+void AAPickupBase::OnRep_CooldownStateChanged()
+{
+	UpdatePickupState();
+}
+
 void AAPickupBase::OnBeginOverlap_Implementation(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	// Functionality in base class
+}
+
+void AAPickupBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AAPickupBase, bIsOnCooldown);
 }

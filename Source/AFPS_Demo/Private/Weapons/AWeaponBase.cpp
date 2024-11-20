@@ -1,9 +1,13 @@
 #include "Weapons/AWeaponBase.h"
 
 #include "Components/StaticMeshComponent.h"
+#include "Net/UnrealNetwork.h"
+#include "GameFramework/GameStateBase.h"
 
 #include "APlayerCharacter.h"
 #include "Components/SkeletalMeshComponent.h"
+
+#include "../AFPS_Demo.h"
 
 AAWeaponBase::AAWeaponBase()
 {
@@ -12,6 +16,8 @@ AAWeaponBase::AAWeaponBase()
 	MeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	RootComponent = MeshComp;
+
+	bReplicates = true;
 }
 
 void AAWeaponBase::BeginPlay()
@@ -23,7 +29,10 @@ void AAWeaponBase::BeginPlay()
 		UE_LOG(LogTemp, Warning, TEXT("Weapon [%s] has more StartingAmmo [%d] than MaxAmmo [%d]"), *GetNameSafe(this), StartingAmmo, MaxAmmo);
 	}
 
-	Ammo = StartingAmmo;
+	if (HasAuthority())
+	{
+		Ammo = StartingAmmo;
+	}	
 }
 
 bool AAWeaponBase::SetOwningPlayer(AAPlayerCharacter* InOwner)
@@ -34,10 +43,23 @@ bool AAWeaponBase::SetOwningPlayer(AAPlayerCharacter* InOwner)
 		return false;
 	}
 
-	OwningPlayer = InOwner;
-	
-	if (AttachToComponent( OwningPlayer->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("hand_r")) )
+	if (!HasAuthority())
 	{
+		UE_LOG(LogTemp, Warning, TEXT("Client tried to change owner of weapon: [%s] to [%s]."), *GetNameSafe(this), *GetNameSafe(InOwner));
+		return false;
+	}
+
+	USkeletalMeshComponent* InMesh = InOwner->GetMesh();
+
+	if (!InMesh)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Tried to attach weapon [%s] to new owner ([%s]), but new owner had no mesh."), *GetNameSafe(this), *GetNameSafe(InOwner));
+		return false;
+	}
+
+	if (AttachToComponent( InMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("hand_r")) )
+	{
+		OwningPlayer = InOwner;
 		return true;
 	}
 
@@ -54,45 +76,51 @@ void AAWeaponBase::EquipWeapon()
 	}
 
 	bIsEquipped = true;
-	MeshComp->SetVisibility(true, true);
-
-	OnEquipStateChanged.Broadcast(this, true);
+	OnRep_IsEquippedChanged();
 }
 
 void AAWeaponBase::UnequipWeapon()
 {
 	if (!bIsEquipped)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Weapon [%s] tried to unequip while already unequipped"), *GetNameSafe(this));
+		UE_LOG(LogTemp, Warning, TEXT("UnequipWeapon() called on Weapon [%s] while already unequipped"), *GetNameSafe(this));
 		return;
 	}
-
-	bIsEquipped = false;
 	
 	if (bIsFiring)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("Weapon [%s] tried to unequip but it was still firing. Stopping fire."), *GetNameSafe(this));
 		StopFire();
 	}
 
-	MeshComp->SetVisibility(false, true);
-
-	OnEquipStateChanged.Broadcast(this, false);
+	bIsEquipped = false;
+	OnRep_IsEquippedChanged();
 }
 
+void AAWeaponBase::OnRep_IsEquippedChanged()
+{
+	MeshComp->SetVisibility(bIsEquipped, true);
+	OnEquipStateChanged.Broadcast(this, bIsEquipped);
+}
+
+// Note: It is the responsibility of the WeaponContainerComponent to call StartFire() from both the
+// client and the server
 void AAWeaponBase::StartFire()
 {
-	if (bIsFiring)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Tried to start weapon [%s] firing while already firing"), *GetNameSafe(this));
-		return;
-	}
-
 	bIsFiring = true;
 	float InitialDelay = 0.f;
 
 	if (LastFireTime >= 0) // Weapon has been fired before
 	{
-		const float CurrentTime = GetWorld()->GetTimeSeconds();
+		AGameStateBase* GameState = GetWorld()->GetGameState<AGameStateBase>();
+
+		if (!GameState)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Attempted to StartFire(), but GameState was null. Assuming CurrentTime == LastFireTime."));
+		}
+
+		// Try to get the CurrentTime (server). If this fails (as GameState hasn't replicated), assume the weapon was just fired
+		const float CurrentTime = (GameState) ? GameState->GetServerWorldTimeSeconds() : LastFireTime;
 		const float TimeSinceLastShot = CurrentTime - LastFireTime;
 		
 		if (TimeSinceLastShot < FireDelay) // Weapon is still "reloading" (between bullets)
@@ -106,19 +134,27 @@ void AAWeaponBase::StartFire()
 	GetWorldTimerManager().SetTimer(TimerHandle_FireDelay, Delegate, FireDelay, true, InitialDelay);
 }
 
+// Note: It is the responsibility of the WeaponContainerComponent to call StopFire() from both the
+// client and the server
 void AAWeaponBase::StopFire()
 {
-	if (!bIsFiring)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Tried to stop weapon [%s] firing while not already firing"), *GetNameSafe(this));
-		return;
-	}
-
 	bIsFiring = false;
 	GetWorldTimerManager().ClearTimer(TimerHandle_FireDelay);
 }
 
-void AAWeaponBase::Fire_Implementation()
+void AAWeaponBase::OnRep_IsFiring()
+{
+	if (bIsFiring)
+	{
+		StartFire();
+	}
+	else
+	{
+		StopFire();
+	}
+}
+
+void AAWeaponBase::Fire()
 {
 	if (!CanFire())
 	{
@@ -126,18 +162,43 @@ void AAWeaponBase::Fire_Implementation()
 		return;
 	}
 	
-	Ammo--;
-	LastFireTime = GetWorld()->GetTimeSeconds();
+	if (HasAuthority())
+	{
+		AGameStateBase* GameState = GetWorld()->GetGameState<AGameStateBase>();
 
-	//UE_LOG(LogTemp, Log, TEXT("Fired [%s] - Remaining Ammo: [%d]"), *GetNameSafe(this), Ammo);
+		if (!GameState)
+		{
+			UE_LOG(LogTemp, Error, TEXT("Server failed to retrieve GameState in [%s]::Fire(). Weapon won't fire."), *GetNameSafe(this));
+			return;
+		}
+		
+		LastFireTime = GameState->GetServerWorldTimeSeconds();
+		Ammo--;
 
-	OnAmmoChanged.Broadcast(this, Ammo, Ammo + 1, MaxAmmo);
+		ClientAmmoChanged(Ammo, Ammo + 1);
+	}
+}
+
+void AAWeaponBase::ClientAmmoChanged_Implementation(const int NewAmmo, const int OldAmmo)
+{
+	OnAmmoChanged.Broadcast(this, NewAmmo, OldAmmo);
 }
 
 void AAWeaponBase::OnFireDelayEnd()
 {
-	// Setting this (even if the weapon can't fire) means it can't attempt to fire again too soon
-	LastFireTime = GetWorld()->GetTimeSeconds();
+	if (HasAuthority())
+	{
+		AGameStateBase* GameState = GetWorld()->GetGameState<AGameStateBase>();
+
+		if (!GameState)
+		{
+			UE_LOG(LogTemp, Error, TEXT("Server failed to retrieve GameState in [%s]::OnFireDelayEnd(). Weapon won't fire."), *GetNameSafe(this));
+			return;
+		}
+
+		// Setting this (even if the weapon can't fire) means it can't attempt to fire again too soon
+		LastFireTime = GameState->GetServerWorldTimeSeconds();
+	}
 
 	if (CanFire())
 	{
@@ -180,4 +241,15 @@ float AAWeaponBase::GetRemainingFireDelay() const
 	const float RemainingDelay = GetWorldTimerManager().GetTimerRemaining(TimerHandle_FireDelay);
 
 	return (RemainingDelay >= 0.f) ? RemainingDelay : 0.f;
+}
+
+void AAWeaponBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AAWeaponBase, Ammo);
+	DOREPLIFETIME(AAWeaponBase, LastFireTime);
+	DOREPLIFETIME(AAWeaponBase, bIsFiring);
+	DOREPLIFETIME(AAWeaponBase, bIsEquipped);
+	DOREPLIFETIME(AAWeaponBase, OwningPlayer);
 }

@@ -13,7 +13,8 @@ class UInputMappingContext;
 class AAWeaponBase;
 class AAPlayerCharacter;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnWeaponAdded, UAWeaponContainerComponent*, OwningComp, AAWeaponBase*, Weapon);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponsReplicated, UAWeaponContainerComponent*, OwningComp); 
+//DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnWeaponAdded, UAWeaponContainerComponent*, OwningComp, AAWeaponBase*, Weapon);
 
 UENUM(BlueprintType)
 enum WeaponEquipState
@@ -25,6 +26,21 @@ enum WeaponEquipState
 	READY				 UMETA(DisplayName = "READY")
 };
 
+USTRUCT()
+struct FWeaponSwapRepData
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY()
+	TEnumAsByte<WeaponEquipState> WeaponEquipState = WeaponEquipState::NOT_EQUIPPED;
+
+	UPROPERTY()
+	bool bShouldFireOnSwapEnd = false;
+
+	UPROPERTY()
+	TObjectPtr<AAWeaponBase> WeaponToSwapTo = nullptr;
+};
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class AFPS_DEMO_API UAWeaponContainerComponent : public UActorComponent
@@ -36,8 +52,14 @@ public:
 
 	void EquipDefaultWeapon();
 
+	//UPROPERTY(BlueprintAssignable)
+	//FOnWeaponAdded OnWeaponAdded;
+
 	UPROPERTY(BlueprintAssignable)
-	FOnWeaponAdded OnWeaponAdded;
+	FOnWeaponsReplicated OnWeaponsReplicated;
+
+	//UFUNCTION(Client, Unreliable)
+	//void ClientOnWeaponAdded(AAWeaponBase* NewWeapon);
 
 protected:
 	virtual void BeginPlay() override;
@@ -50,10 +72,13 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Weapons")
 	TArray<TSubclassOf<AAWeaponBase>> DefaultWeapons;
 		
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing="OnRep_Weapons")
 	TArray<TObjectPtr<AAWeaponBase>> Weapons;
 
-	UPROPERTY()
+	UFUNCTION()
+	void OnRep_Weapons();
+
+	UPROPERTY(Replicated)
 	TObjectPtr<AAWeaponBase> EquippedWeapon;
 
 	UFUNCTION()
@@ -69,9 +94,6 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Weapon Swapping")
 	float WeaponEquipDelaySeconds = 0.4f;
 
-	UPROPERTY()
-	bool bShouldFireOnSwapEnd = false;
-
 	UFUNCTION()
 	void StartWeaponSwap();
 
@@ -81,11 +103,8 @@ protected:
 	UFUNCTION()
 	void OnWeaponEquipDelayEnd();
 
-	UPROPERTY()
-	TEnumAsByte<WeaponEquipState> WeaponEquipState = WeaponEquipState::NOT_EQUIPPED;
-
-	UPROPERTY()
-	TObjectPtr<AAWeaponBase> WeaponToSwapTo = nullptr;
+	UPROPERTY(Replicated)
+	FWeaponSwapRepData RepData_WeaponSwap;
 
 	FTimerHandle TimerHandle_WeaponSwap;
 
@@ -102,14 +121,23 @@ protected:
 	TObjectPtr<UInputAction> FireAction;
 
 	UFUNCTION()
-	void OnFireStart();
+	void OnFireStartInput();
+
+	UFUNCTION(Server, Reliable)
+	void ServerOnFireStartInput();
 
 	UFUNCTION()
-	void OnFireStop();
+	void OnFireStopInput();
+
+	UFUNCTION(Server, Reliable)
+	void ServerOnFireStopInput();
 	
 	// Generic Weapon Swap ----
 	UFUNCTION()
 	void ProcessSwapInput(FGameplayTag WeaponIdentifier);
+
+	UFUNCTION(Server, Reliable)
+	void ServerProcessSwapInput(FGameplayTag WeaponIdentifier);
 
 	// Equip Rocket ----
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")

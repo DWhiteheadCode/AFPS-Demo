@@ -36,6 +36,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	bool AddArmour(const int Amount, const bool bCanOverHeal, AActor* InstigatorActor);
 
+	UFUNCTION(NetMulticast, Unreliable)
+	void MulticastStackChanged(UAStackComponent* OwningComp, AActor* InstigatorActor, int NewHealth, int DeltaHealth, int NewArmour, int DeltaArmour, int TotalDelta);
+
 	UPROPERTY(BlueprintAssignable)
 	FOnStackChanged OnStackChanged;
 
@@ -53,7 +56,7 @@ protected:
 	float SelfDamageMultiplier = 0.67f;
 
 	// HEALTH -------------------------------------------------------------------------------
-	UPROPERTY()
+	UPROPERTY(Replicated)
 	int Health = 125;
 
 	UPROPERTY(EditAnywhere, Category = "Health")
@@ -81,7 +84,7 @@ protected:
 
 
 	// ARMOUR -------------------------
-	UPROPERTY()
+	UPROPERTY(Replicated)
 	int Armour = 50;
 
 	UPROPERTY(EditAnywhere, Category = "Armour")
@@ -109,5 +112,4 @@ protected:
 	void DecayOverArmour();
 
 	FTimerHandle TimerHandle_OverArmourDecay;
-		
 };

@@ -40,7 +40,7 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Cooldown")
 	float CooldownDuration = 30.f;
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(ReplicatedUsing="OnRep_CooldownStateChanged", BlueprintReadOnly)
 	bool bIsOnCooldown = false;
 
 	UFUNCTION()
@@ -51,6 +51,9 @@ protected:
 
 	UFUNCTION()
 	void UpdatePickupState();
+
+	UFUNCTION()
+	void OnRep_CooldownStateChanged();
 
 	FTimerHandle TimerHandle_Cooldown;
 };

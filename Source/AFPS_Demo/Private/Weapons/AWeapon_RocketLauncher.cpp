@@ -10,7 +10,7 @@ AAWeapon_RocketLauncher::AAWeapon_RocketLauncher()
 	FireDelay = 0.8f;
 }
 
-void AAWeapon_RocketLauncher::Fire_Implementation()
+void AAWeapon_RocketLauncher::Fire()
 {
 	if (!CanFire())
 	{
@@ -30,16 +30,19 @@ void AAWeapon_RocketLauncher::Fire_Implementation()
 		return;
 	}	
 
-	Super::Fire_Implementation();
+	Super::Fire();
 
-	FActorSpawnParameters SpawnParams;
-	SpawnParams.Instigator = OwningPlayer;
-	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	if (HasAuthority())
+	{
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.Instigator = OwningPlayer;
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-	const FRotator EyeRotation = OwningPlayer->GetControlRotation();
-	const FVector EyeLocation = OwningPlayer->GetPawnViewLocation();
+		const FRotator EyeRotation = OwningPlayer->GetControlRotation();
+		const FVector EyeLocation = OwningPlayer->GetPawnViewLocation();
 
-	const FTransform SpawnTM = FTransform(EyeRotation, EyeLocation);
+		const FTransform SpawnTM = FTransform(EyeRotation, EyeLocation);
 
-	GetWorld()->SpawnActor<AActor>(ProjectileClass, SpawnTM, SpawnParams);
+		GetWorld()->SpawnActor<AActor>(ProjectileClass, SpawnTM, SpawnParams);
+	}	
 }

@@ -13,7 +13,7 @@ class AAPlayerCharacter;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnEquipStateChanged, AAWeaponBase*, Weapon, bool, bIsEquipped);
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnAmmoChanged, AAWeaponBase*, Weapon, int, NewAmmo, int, OldAmmo, int, MaxAmmo);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnAmmoChanged, AAWeaponBase*, Weapon, int, NewAmmo, int, OldAmmo);
 
 UCLASS()
 class AFPS_DEMO_API AAWeaponBase : public AActor
@@ -54,8 +54,8 @@ public:
 	void StopFire();
 
 	// Called when the weapon actually fires (i.e. each time a bullet/projectile is shot)
-	UFUNCTION(BlueprintNativeEvent)
-	void Fire();
+	UFUNCTION()
+	virtual void Fire();
 
 	UFUNCTION()
 	bool CanFire() const;
@@ -82,11 +82,11 @@ protected:
 	TObjectPtr<UStaticMeshComponent> MeshComp;
 
 	// IDENTIFIER -----------------------------------------------------------------
-	UPROPERTY(EditDefaultsOnly, Category="Weapon")
+	UPROPERTY(EditDefaultsOnly, Replicated, Category="Weapon")
 	FGameplayTag Identifier;
 
 	// OWNER ----------------------------------------------------------------------
-	UPROPERTY()
+	UPROPERTY(Replicated)
 	TObjectPtr<AAPlayerCharacter> OwningPlayer;
 
 	// AMMO -----------------------------------------------------------------------
@@ -96,8 +96,13 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Ammo")
 	int StartingAmmo = 10;
 
-	UPROPERTY()
-	int Ammo;
+	UPROPERTY(Replicated)
+	int Ammo = 0;
+
+	// Only used for UI changes so could maybe be unreliable, though packet loss could 
+	// result in UI showing the user has ammo when they don't, which would be jarring.
+	UFUNCTION(Client, Reliable) 
+	void ClientAmmoChanged(const int NewAmmo, const int OldAmmo);
 
 	// FIRING ---------------------------------------------------------------------
 	UPROPERTY(EditAnywhere, Category = "Weapon")
@@ -105,16 +110,23 @@ protected:
 
 	FTimerHandle TimerHandle_FireDelay;
 
-	UPROPERTY()
+	UPROPERTY(Replicated)
 	float LastFireTime = -1.f;
 
-	UPROPERTY()
+	UPROPERTY(ReplicatedUsing="OnRep_IsFiring")
 	bool bIsFiring = false;
+
+	UFUNCTION()
+	void OnRep_IsFiring();
 
 	UFUNCTION()
 	void OnFireDelayEnd();
 
 	// EQUIPPED -------------------------------------------------------------------
-	UPROPERTY()
+	UPROPERTY(ReplicatedUsing="OnRep_IsEquippedChanged")
 	bool bIsEquipped = false;
+
+	UFUNCTION()
+	void OnRep_IsEquippedChanged();
+
 };

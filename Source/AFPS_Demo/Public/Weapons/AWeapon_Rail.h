@@ -17,7 +17,7 @@ class AFPS_DEMO_API AAWeapon_Rail : public AAWeaponBase
 public:
 	AAWeapon_Rail();
 
-	void Fire_Implementation() override;
+	void Fire() override;
 
 protected:
 	UPROPERTY(EditAnywhere, Category="Damage")
@@ -27,9 +27,15 @@ protected:
 	float Range = 10000.f;
 
 	UFUNCTION()
-	TArray<UAStackComponent*> GetComponentsToDamage() const;
+	TArray<FHitResult> PerformTrace();
+
+	UFUNCTION()
+	TArray<UAStackComponent*> GetStackComponentsFromHitResults(const TArray<FHitResult> HitResults) const;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Trace")
 	TEnumAsByte<ECollisionChannel> TraceChannel;
+
+	UFUNCTION(NetMulticast, Unreliable)
+	void MulticastDrawTrail(const FVector Start, const FVector End);
 
 };

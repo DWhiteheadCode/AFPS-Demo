@@ -10,7 +10,7 @@ AAWeapon_LG::AAWeapon_LG()
 	FireDelay = 0.055f;
 }
 
-void AAWeapon_LG::Fire_Implementation()
+void AAWeapon_LG::Fire()
 {
 	if (!CanFire())
 	{
@@ -24,37 +24,72 @@ void AAWeapon_LG::Fire_Implementation()
 		return;
 	}
 
-	Super::Fire_Implementation();
-	
+	Super::Fire();
+
+	if ( (OwningPlayer && OwningPlayer->IsLocallyControlled()) || HasAuthority() )
+	{
+		FHitResult HitResult = PerformTrace();
+
+		if (HasAuthority())
+		{
+			const AActor* HitActor = HitResult.GetActor();
+			if (HitActor)
+			{
+				UAStackComponent* StackComp = Cast<UAStackComponent>(HitActor->GetComponentByClass(UAStackComponent::StaticClass()));
+
+				if (StackComp)
+				{
+					StackComp->ApplyDamage(Damage, OwningPlayer);
+				}
+			}
+		}
+	}	
+}
+
+FHitResult AAWeapon_LG::PerformTrace()
+{
+	if (!OwningPlayer)
+	{
+		UE_LOG(LogTemp, Error, TEXT("LG [%s] tried to perform trace, but OwningPlayer was null."), *GetNameSafe(this));
+		return FHitResult();
+	}
+
 	const FVector StartPos = OwningPlayer->GetPawnViewLocation();
 	const FRotator FiringDirection = OwningPlayer->GetControlRotation();
 
-	const FVector EndPos = StartPos + (FiringDirection.Vector() * Range);
+	FVector EndPos = StartPos + (FiringDirection.Vector() * Range);
 
 	FCollisionQueryParams QueryParams;
-	QueryParams.AddIgnoredActor(OwningPlayer);
+
 	QueryParams.AddIgnoredActor(this);
+	QueryParams.AddIgnoredActor(OwningPlayer);
 
 	FHitResult HitResult;
 	GetWorld()->LineTraceSingleByChannel(HitResult, StartPos, EndPos, TraceChannel, QueryParams);
 
-	const AActor* HitActor = HitResult.GetActor();
-	if (HitActor)
-	{
-		UAStackComponent* StackComp = Cast<UAStackComponent>(HitActor->GetComponentByClass(UAStackComponent::StaticClass()));
-
-		if (StackComp)
-		{
-			StackComp->ApplyDamage(Damage, OwningPlayer);
-		}
-	}
-
+	// Update EndPos to draw debug line
 	if (HitResult.bBlockingHit)
 	{
-		DrawDebugLine(GetWorld(), StartPos, HitResult.ImpactPoint, FColor::Red, false, FireDelay, 0, 1.f);
+		EndPos = HitResult.ImpactPoint;
 	}
-	else
+
+	DrawDebugLine(GetWorld(), StartPos, EndPos, FColor::Blue, false, FireDelay, 0, 1.f);
+
+	if (HasAuthority())
 	{
-		DrawDebugLine(GetWorld(), StartPos, EndPos, FColor::Blue, false, FireDelay, 0, 1.f);
+		MulticastDrawBeam(StartPos, EndPos);
 	}
+
+	return HitResult;
+}
+
+void AAWeapon_LG::MulticastDrawBeam_Implementation(const FVector Start, const FVector End)
+{
+	// Local player already drew beam at time of firing
+	if (OwningPlayer && OwningPlayer->IsLocallyControlled())
+	{
+		return;
+	}
+
+	DrawDebugLine(GetWorld(), Start, End, FColor::Blue, false, FireDelay, 0, 1.f);
 }

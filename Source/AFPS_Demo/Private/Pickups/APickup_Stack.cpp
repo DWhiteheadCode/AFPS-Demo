@@ -5,8 +5,6 @@
 void AAPickup_Stack::OnBeginOverlap_Implementation(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	UE_LOG(LogTemp, Log, TEXT("Stack pickup overlap"));
-
 	if (bIsOnCooldown)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Actor overlapped stack pickup [%s], but pickup was on cooldown"), *GetNameSafe(this));
@@ -20,8 +18,7 @@ void AAPickup_Stack::OnBeginOverlap_Implementation(UPrimitiveComponent* Overlapp
 	}
 
 	UAStackComponent* StackComp = Cast<UAStackComponent>(OtherActor->GetComponentByClass(UAStackComponent::StaticClass()));
-
-	if (StackComp)
+	if (StackComp && HasAuthority())
 	{
 		const bool bHealedHealth = StackComp->AddHealth(HealthAmount, bCanOverhealHealth, this);
 		const bool bHealedArmour = StackComp->AddArmour(ArmourAmount, bCanOverhealArmour, this);
@@ -40,6 +37,6 @@ void AAPickup_Stack::OnBeginOverlap_Implementation(UPrimitiveComponent* Overlapp
 				UpdatePickupState();
 				SetLifeSpan(2.f);
 			}
-		}		
+		}
 	}
 }
