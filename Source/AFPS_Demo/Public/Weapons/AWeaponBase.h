@@ -8,6 +8,7 @@
 #include "AWeaponBase.generated.h"
 
 class UStaticMeshComponent;
+class USoundCue;
 
 class AAPlayerCharacter;
 
@@ -81,6 +82,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category="Components")
 	TObjectPtr<UStaticMeshComponent> MeshComp;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	TObjectPtr<UAudioComponent> AudioComp;
+
 	// IDENTIFIER -----------------------------------------------------------------
 	UPROPERTY(EditDefaultsOnly, Replicated, Category="Weapon")
 	FGameplayTag Identifier;
@@ -128,5 +132,9 @@ protected:
 
 	UFUNCTION()
 	void OnRep_IsEquippedChanged();
+
+	// SOUND ----------------------------------------------------------------------
+	UPROPERTY(EditDefaultsOnly, Category = "Sound")
+	USoundCue* FireSound;
 
 };

@@ -3,9 +3,11 @@
 #include "Components/StaticMeshComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "GameFramework/GameStateBase.h"
+#include "Sound/SoundCue.h"
+#include "Components/AudioComponent.h"
+#include "Components/SkeletalMeshComponent.h"
 
 #include "APlayerCharacter.h"
-#include "Components/SkeletalMeshComponent.h"
 
 #include "../AFPS_Demo.h"
 
@@ -16,6 +18,10 @@ AAWeaponBase::AAWeaponBase()
 	MeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	RootComponent = MeshComp;
+
+	AudioComp = CreateDefaultSubobject<UAudioComponent>("AudioComp");
+	AudioComp->bAutoActivate = false;
+	AudioComp->SetupAttachment(RootComponent);
 
 	bReplicates = true;
 }
@@ -177,6 +183,11 @@ void AAWeaponBase::Fire()
 
 		ClientAmmoChanged(Ammo, Ammo + 1);
 	}
+
+	if (AudioComp)
+	{
+		AudioComp->Play();
+	}	
 }
 
 void AAWeaponBase::ClientAmmoChanged_Implementation(const int NewAmmo, const int OldAmmo)
