@@ -14,7 +14,7 @@ class AAWeaponBase;
 class AAPlayerCharacter;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponsReplicated, UAWeaponContainerComponent*, OwningComp); 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnWeaponAdded, UAWeaponContainerComponent*, OwningComp, AAWeaponBase*, Weapon);
+//DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnWeaponAdded, UAWeaponContainerComponent*, OwningComp, AAWeaponBase*, Weapon);
 
 UENUM(BlueprintType)
 enum WeaponEquipState
@@ -52,14 +52,14 @@ public:
 
 	void EquipDefaultWeapon();
 
-	UPROPERTY(BlueprintAssignable)
-	FOnWeaponAdded OnWeaponAdded;
+	//UPROPERTY(BlueprintAssignable)
+	//FOnWeaponAdded OnWeaponAdded;
 
 	UPROPERTY(BlueprintAssignable)
 	FOnWeaponsReplicated OnWeaponsReplicated;
 
-	UFUNCTION(Client, Unreliable)
-	void ClientOnWeaponAdded(AAWeaponBase* NewWeapon);
+	//UFUNCTION(Client, Unreliable)
+	//void ClientOnWeaponAdded(AAWeaponBase* NewWeapon);
 
 protected:
 	virtual void BeginPlay() override;

@@ -116,7 +116,8 @@ bool UAWeaponContainerComponent::InstantiateWeapon(TSubclassOf<AAWeaponBase> Wea
 	NewWeapon->SetOwningPlayer(OwningCharacter);
 	Weapons.Add(NewWeapon);
 
-	ClientOnWeaponAdded(NewWeapon); // Only the owner of the weapon needs to update their UI
+	OnRep_Weapons(); // Server should notify its delegate too
+	//ClientOnWeaponAdded(NewWeapon); // Only the owner of the weapon needs to update their UI
 
 	return true;
 }
@@ -387,11 +388,13 @@ AAWeaponBase* UAWeaponContainerComponent::GetWeapon(const FGameplayTag WeaponIde
 	return nullptr;
 }
 
+/*
 void UAWeaponContainerComponent::ClientOnWeaponAdded_Implementation(AAWeaponBase* NewWeapon)
 {
 	//LogOnScreen(this, FString("ClientOnWeaponAdded()"));
 	OnWeaponAdded.Broadcast(this, NewWeapon);
 }
+*/
 
 void UAWeaponContainerComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
