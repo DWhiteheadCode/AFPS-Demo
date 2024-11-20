@@ -226,22 +226,22 @@ void UAWeaponContainerComponent::ProcessSwapInput(FGameplayTag WeaponIdentifier)
 
 	if (EquippedWeapon)
 	{
+		const float PreSwapDelaySeconds = EquippedWeapon->GetRemainingFireDelay();
 		RepData_WeaponSwap.bShouldFireOnSwapEnd = EquippedWeapon->IsFiring();
 
-		if (!EquippedWeapon->IsFiring())
+		if (EquippedWeapon->IsFiring())
 		{
-			//UE_LOG(LogTemp, Log, TEXT("Starting swap immediately"));
-			StartWeaponSwap();
-		}
-		else // Wait until EquippedWeapon finishes reloading to swap
-		{
-			const float PreSwapDelaySeconds = EquippedWeapon->GetRemainingFireDelay();
 			EquippedWeapon->StopFire();
-
-			//UE_LOG(LogTemp, Log, TEXT("Starting swap in [%f] seconds"), PreSwapDelaySeconds);
-
+		}
+		
+		if (PreSwapDelaySeconds > 0.f) // Wait until EquippedWeapon finishes reloading to start the swap
+		{
 			RepData_WeaponSwap.WeaponEquipState = WeaponEquipState::WAITING_TO_UNEQUIP;
 			GetWorld()->GetTimerManager().SetTimer(TimerHandle_WeaponSwap, this, &UAWeaponContainerComponent::StartWeaponSwap, PreSwapDelaySeconds);
+		}
+		else
+		{
+			StartWeaponSwap();
 		}
 	}
 	else // Equipping first weapon, ignore unequip delay
