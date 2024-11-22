@@ -32,6 +32,8 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	TObjectPtr<UProjectileMovementComponent> ProjectileMovementComp;
 
+	UPROPERTY(VisibleAnywhere, Category = "Components")
+	TObjectPtr<UAudioComponent> AudioComp;
 
 	// DETONATION ----------------------------------------------------------
 	UFUNCTION()

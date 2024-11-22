@@ -29,6 +29,9 @@ AAProjectile_Rocket::AAProjectile_Rocket()
 	ProjectileMovementComp->ProjectileGravityScale = 0.f;
 	ProjectileMovementComp->InitialSpeed = 1000.f;
 
+	AudioComp = CreateDefaultSubobject<UAudioComponent>("AuidioComp");
+	AudioComp->SetupAttachment(RootComponent);
+
 	bReplicates = true;
 }
 
@@ -55,6 +58,7 @@ void AAProjectile_Rocket::Detonate()
 	DrawDebugSphere(GetWorld(), GetActorLocation(), CloseFalloffRange, 16, FColor::White, false, 5.f, 0, 1.f);
 	DrawDebugSphere(GetWorld(), GetActorLocation(), FarFalloffRange, 16, FColor::White, false, 5.f, 0, 1.f);
 
+	AudioComp->Stop();
 	UGameplayStatics::PlaySoundAtLocation(this, DetonationSound, GetActorLocation());
 
 	if (HasAuthority())
