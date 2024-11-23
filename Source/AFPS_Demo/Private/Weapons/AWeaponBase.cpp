@@ -183,7 +183,16 @@ void AAWeaponBase::Fire()
 
 	if (FireSound)
 	{
-		UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetActorLocation());
+		// Player's own weapon sound shouldn't be different depending on its position relative to their camera, or based on 
+		// their movement direction etc.
+		if (IsLocallyOwned()) 
+		{
+			UGameplayStatics::PlaySound2D(this, FireSound); 
+		}
+		else
+		{
+			UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetActorLocation());
+		}		
 	}	
 }
 
@@ -227,6 +236,21 @@ bool AAWeaponBase::IsFiring() const
 bool AAWeaponBase::IsEquipped() const
 {
 	return bIsEquipped;
+}
+
+bool AAWeaponBase::IsLocallyOwned() const
+{
+	if (OwningPlayer)
+	{
+		AController* Controller = OwningPlayer->GetController();
+
+		if (Controller && Controller->IsLocalPlayerController())
+		{
+			return true;
+		}
+	}
+
+	return false;
 }
 
 FGameplayTag AAWeaponBase::GetIdentifier() const

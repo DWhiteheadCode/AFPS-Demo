@@ -29,6 +29,9 @@ public:
 	UFUNCTION()
 	bool SetOwningPlayer(AAPlayerCharacter* InOwner);
 
+	UFUNCTION()
+	bool IsLocallyOwned() const;
+
 	UFUNCTION(BlueprintCallable)
 	FGameplayTag GetIdentifier() const;
 
