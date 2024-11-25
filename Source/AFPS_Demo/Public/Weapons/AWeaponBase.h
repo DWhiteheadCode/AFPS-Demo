@@ -85,13 +85,19 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category="Components")
 	TObjectPtr<UStaticMeshComponent> MeshComp;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Components")
+	TObjectPtr<UAudioComponent> AmbientAudioComp;
+
 	// IDENTIFIER -----------------------------------------------------------------
 	UPROPERTY(EditDefaultsOnly, Replicated, Category="Weapon")
 	FGameplayTag Identifier;
 
 	// OWNER ----------------------------------------------------------------------
-	UPROPERTY(Replicated)
+	UPROPERTY(ReplicatedUsing="OnRep_OwningPlayer")
 	TObjectPtr<AAPlayerCharacter> OwningPlayer;
+
+	UFUNCTION()
+	void OnRep_OwningPlayer();
 
 	// AMMO -----------------------------------------------------------------------
 	UPROPERTY(EditAnywhere, Category = "Ammo")
@@ -135,6 +141,5 @@ protected:
 
 	// SOUND ----------------------------------------------------------------------
 	UPROPERTY(EditDefaultsOnly, Category = "Sound")
-	USoundCue* FireSound;
-
+	TObjectPtr<USoundCue> FireSound;
 };

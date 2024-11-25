@@ -20,6 +20,10 @@ AAWeaponBase::AAWeaponBase()
 
 	RootComponent = MeshComp;
 
+	AmbientAudioComp = CreateDefaultSubobject<UAudioComponent>("AudioComp");
+	AmbientAudioComp->bAutoActivate = false;
+	AmbientAudioComp->SetupAttachment(RootComponent);
+
 	bReplicates = true;
 }
 
@@ -63,6 +67,7 @@ bool AAWeaponBase::SetOwningPlayer(AAPlayerCharacter* InOwner)
 	if (AttachToComponent( InMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("hand_r")) )
 	{
 		OwningPlayer = InOwner;
+		OnRep_OwningPlayer();
 		return true;
 	}
 
@@ -104,6 +109,18 @@ void AAWeaponBase::OnRep_IsEquippedChanged()
 {
 	MeshComp->SetVisibility(bIsEquipped, true);
 	OnEquipStateChanged.Broadcast(this, bIsEquipped);
+
+	if (AmbientAudioComp && AmbientAudioComp->Sound)
+	{
+		if (bIsEquipped)
+		{
+			AmbientAudioComp->Activate();
+		}
+		else
+		{
+			AmbientAudioComp->Deactivate();
+		}
+	}
 }
 
 // Note: It is the responsibility of the WeaponContainerComponent to call StartFire() from both the
@@ -266,6 +283,17 @@ int AAWeaponBase::GetAmmo() const
 int AAWeaponBase::GetMaxAmmo() const
 {
 	return MaxAmmo;
+}
+
+void AAWeaponBase::OnRep_OwningPlayer()
+{
+	if (OwningPlayer && OwningPlayer->IsLocallyControlled())
+	{
+		if (AmbientAudioComp) // Ambient sound should be played in 2D for the player holding the weapon
+		{
+			AmbientAudioComp->SetUISound(true);
+		}
+	}
 }
 
 float AAWeaponBase::GetRemainingFireDelay() const
