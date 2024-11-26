@@ -25,6 +25,36 @@ void AAPickupBase::PostInitializeComponents()
 	CollisionSphereComp->OnComponentBeginOverlap.AddDynamic(this, &AAPickupBase::OnBeginOverlap);
 }
 
+void AAPickupBase::OnBeginOverlap_Implementation(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (CanPickup(OtherActor))
+	{
+		Pickup(OtherActor);
+	}	
+}
+
+void AAPickupBase::Pickup(AActor* OtherActor)
+{
+	bIsActive = false;
+	OnRep_IsActive();
+
+	if (bRespawns)
+	{
+		StartCooldown();
+	}
+	else
+	{
+		SetLifeSpan(2.f);
+	}
+}
+
+// Derived classes should typically override this.
+bool AAPickupBase::CanPickup(AActor* OtherActor)
+{
+	return OtherActor && HasAuthority();
+}
+
 void AAPickupBase::StartCooldown()
 {
 	if (!bRespawns)
@@ -33,49 +63,42 @@ void AAPickupBase::StartCooldown()
 		return;
 	}
 
-	if (bIsOnCooldown)
+	if (bIsActive)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Tried to start pickup [%s] cooldown, but it was already on cooldown."), *GetNameSafe(this));
+		UE_LOG(LogTemp, Warning, TEXT("Tried to start pickup [%s] cooldown, but it was active."), *GetNameSafe(this));
 		return;
 	}
 
-	bIsOnCooldown = true;
-	UpdatePickupState();
+	if (!HasAuthority())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Client tried to start pickup [%s] coolodown."), *GetNameSafe(this));
+		return;
+	}
+
 	GetWorld()->GetTimerManager().SetTimer(TimerHandle_Cooldown, this, &AAPickupBase::OnCooldownEnd, CooldownDuration);
 }
 
 void AAPickupBase::OnCooldownEnd()
 {
-	if (!bIsOnCooldown)
+	if (bIsActive)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Tried to end pickup [%s] cooldown, but it wasn't on cooldown."), *GetNameSafe(this));
+		UE_LOG(LogTemp, Warning, TEXT("Tried to end pickup [%s] cooldown, but it was already active."), *GetNameSafe(this));
 		return;
 	}
 
-	bIsOnCooldown = false;
-	UpdatePickupState();
+	bIsActive = true;
+	OnRep_IsActive();
 }
 
-void AAPickupBase::UpdatePickupState()
+void AAPickupBase::OnRep_IsActive()
 {
-	SetActorEnableCollision(!bIsOnCooldown);
-	MeshComp->SetVisibility(!bIsOnCooldown, true);
-}
-
-void AAPickupBase::OnRep_CooldownStateChanged()
-{
-	UpdatePickupState();
-}
-
-void AAPickupBase::OnBeginOverlap_Implementation(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
-{
-	// Functionality in base class
+	SetActorEnableCollision(bIsActive);
+	MeshComp->SetVisibility(bIsActive, true);
 }
 
 void AAPickupBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(AAPickupBase, bIsOnCooldown);
+	DOREPLIFETIME(AAPickupBase, bIsActive);
 }

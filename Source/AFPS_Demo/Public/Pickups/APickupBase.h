@@ -34,14 +34,20 @@ protected:
 		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 	
 	// PICKUP FUNCTIONALITY ------------------------------------------
+	UFUNCTION()
+	virtual bool CanPickup(AActor* OtherActor);
+
+	UFUNCTION()
+	virtual void Pickup(AActor* OtherActor);
+	
 	UPROPERTY(EditAnywhere, Category="Cooldown")
 	bool bRespawns = true;
 
 	UPROPERTY(EditAnywhere, Category = "Cooldown")
 	float CooldownDuration = 30.f;
 
-	UPROPERTY(ReplicatedUsing="OnRep_CooldownStateChanged", BlueprintReadOnly)
-	bool bIsOnCooldown = false;
+	UPROPERTY(ReplicatedUsing="OnRep_IsActive", BlueprintReadOnly)
+	bool bIsActive = true;
 
 	UFUNCTION()
 	void StartCooldown();
@@ -50,10 +56,7 @@ protected:
 	void OnCooldownEnd();
 
 	UFUNCTION()
-	void UpdatePickupState();
-
-	UFUNCTION()
-	void OnRep_CooldownStateChanged();
+	void OnRep_IsActive();
 
 	FTimerHandle TimerHandle_Cooldown;
 };
