@@ -49,6 +49,12 @@ public:
 	UFUNCTION(BlueprintCallable)
 	int GetArmour() const;
 
+	UFUNCTION()
+	bool CanAddHealth(const int Amount, const bool bCanOverheal);
+
+	UFUNCTION()
+	bool CanAddArmour(const int Amount, const bool bCanOverheal);
+
 
 protected:
 	// GENERAL ------------------------------------------------------------------------------

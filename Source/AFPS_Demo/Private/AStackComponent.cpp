@@ -252,6 +252,36 @@ int UAStackComponent::GetArmour() const
 	return Armour;
 }
 
+bool UAStackComponent::CanAddHealth(const int Amount, const bool bCanOverheal)
+{
+	if (Amount <= 0)
+	{
+		return false;
+	}
+
+	if (bCanOverheal)
+	{
+		return true;
+	}
+
+	return Health < BaseHealthMax;
+}
+
+bool UAStackComponent::CanAddArmour(const int Amount, const bool bCanOverheal)
+{
+	if (Amount <= 0)
+	{
+		return false;
+	}
+
+	if (bCanOverheal)
+	{
+		return true;
+	}
+
+	return Armour < BaseArmourMax;
+}
+
 bool UAStackComponent::CanDecayOverHealth() const
 {
 	return OverHealthDecayAmount > 0 && OverHealthDecayIntervalSeconds > 0;
