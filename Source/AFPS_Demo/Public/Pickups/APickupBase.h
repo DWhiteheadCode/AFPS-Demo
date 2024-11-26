@@ -6,6 +6,7 @@
 
 class USphereComponent;
 class UStaticMeshComponent;
+class USoundCue;
 
 UCLASS()
 class AFPS_DEMO_API AAPickupBase : public AActor
@@ -33,6 +34,10 @@ protected:
 	void OnBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, 
 		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 	
+	// SOUND ---------------------------------------------------------
+	UPROPERTY(EditDefaultsOnly, Category="Sound")
+	TObjectPtr<USoundCue> PickupSound;
+
 	// PICKUP FUNCTIONALITY ------------------------------------------
 	UFUNCTION()
 	virtual bool CanPickup(AActor* OtherActor);
