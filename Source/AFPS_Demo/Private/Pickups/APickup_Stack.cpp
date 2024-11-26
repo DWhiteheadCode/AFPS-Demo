@@ -2,41 +2,54 @@
 
 #include "AStackComponent.h"
 
-void AAPickup_Stack::OnBeginOverlap_Implementation(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+bool AAPickup_Stack::CanPickup(AActor* OtherActor)
 {
-	if (bIsOnCooldown)
+	if (!HasAuthority())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Actor overlapped stack pickup [%s], but pickup was on cooldown"), *GetNameSafe(this));
-		return;
-	}
-
-	if (!OtherActor)
-	{
-		UE_LOG(LogTemp, Error, TEXT("Nullptr actor overlapped with stack pickup [%s]"), *GetNameSafe(this));
-		return;
+		return false;
 	}
 
 	UAStackComponent* StackComp = Cast<UAStackComponent>(OtherActor->GetComponentByClass(UAStackComponent::StaticClass()));
-	if (StackComp && HasAuthority())
+	if (StackComp)
+	{
+		if (StackComp->CanAddHealth(HealthAmount, bCanOverhealHealth) || StackComp->CanAddArmour(ArmourAmount, bCanOverhealArmour))
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
+void AAPickup_Stack::Pickup(AActor* OtherActor)
+{
+	if (!OtherActor)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Null OtherActor tried to Pickup() Stack-Pickup [%s]"), *GetNameSafe(this));
+		return;
+	}
+
+	if (!CanPickup(OtherActor))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Actor [%s] tried to pickup StackPickup [%s], but CanPickup() was false."), *GetNameSafe(OtherActor), *GetNameSafe(this));
+		return;
+	}
+
+	Super::Pickup(OtherActor);
+
+	UAStackComponent* StackComp = Cast<UAStackComponent>(OtherActor->GetComponentByClass(UAStackComponent::StaticClass()));
+	if (StackComp)
 	{
 		const bool bHealedHealth = StackComp->AddHealth(HealthAmount, bCanOverhealHealth, this);
 		const bool bHealedArmour = StackComp->AddArmour(ArmourAmount, bCanOverhealArmour, this);
 
-		if (bHealedHealth || bHealedArmour)
+		if (!bHealedHealth && !bHealedArmour)
 		{
-			if (bRespawns)
-			{
-				UE_LOG(LogTemp, Log, TEXT("Starting stack pickup cooldown"));
-				StartCooldown();
-			}
-			else
-			{
-				UE_LOG(LogTemp, Log, TEXT("Consuming stack pickup"));
-				bIsOnCooldown = true;
-				UpdatePickupState();
-				SetLifeSpan(2.f);
-			}
+			UE_LOG(LogTemp, Warning, TEXT("Stack pickup [%s] was picked up by [%s], but it didn't heal health or armour."), *GetNameSafe(this), *GetNameSafe(OtherActor));
 		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Stack pickup [%s] was picked up by [%s], but they didn't have a StackComponent."), *GetNameSafe(this), *GetNameSafe(OtherActor));
 	}
 }

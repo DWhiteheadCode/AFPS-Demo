@@ -13,9 +13,10 @@ class AFPS_DEMO_API AAPickup_Stack : public AAPickupBase
 	GENERATED_BODY()
 	
 protected:
-	// COLLISION ----------------------------------------------------------
-	void OnBeginOverlap_Implementation(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) override;
+	// PICKUP LOGIC -------------------------------------------------------
+	bool CanPickup(AActor* OtherActor) override;
+
+	void Pickup(AActor* OtherActor) override;
 
 	// HEALTH -------------------------------------------------------------
 	UPROPERTY(EditAnywhere, Category="Stack")
