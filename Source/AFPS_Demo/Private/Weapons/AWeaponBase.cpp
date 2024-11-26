@@ -6,7 +6,6 @@
 #include "Sound/SoundCue.h"
 #include "Components/AudioComponent.h"
 #include "Components/SkeletalMeshComponent.h"
-#include "Kismet/GameplayStatics.h"
 
 #include "APlayerCharacter.h"
 
@@ -20,9 +19,13 @@ AAWeaponBase::AAWeaponBase()
 
 	RootComponent = MeshComp;
 
-	AmbientAudioComp = CreateDefaultSubobject<UAudioComponent>("AudioComp");
+	AmbientAudioComp = CreateDefaultSubobject<UAudioComponent>("AmbientAudioComp");
 	AmbientAudioComp->bAutoActivate = false;
 	AmbientAudioComp->SetupAttachment(RootComponent);
+
+	FiringAudioComp = CreateDefaultSubobject<UAudioComponent>("FiringAudioComp");
+	FiringAudioComp->bAutoActivate = false;
+	FiringAudioComp->SetupAttachment(RootComponent);
 
 	bReplicates = true;
 }
@@ -196,21 +199,9 @@ void AAWeaponBase::Fire()
 		Ammo--;
 
 		ClientAmmoChanged(Ammo, Ammo + 1);
-	}
 
-	if (FireSound)
-	{
-		// Player's own weapon sound shouldn't be different depending on its position relative to their camera, or based on 
-		// their movement direction etc.
-		if (IsLocallyOwned()) 
-		{
-			UGameplayStatics::PlaySound2D(this, FireSound); 
-		}
-		else
-		{
-			UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetActorLocation());
-		}		
-	}	
+		MulticastOnFire();
+	}
 }
 
 void AAWeaponBase::ClientAmmoChanged_Implementation(const int NewAmmo, const int OldAmmo)
@@ -237,6 +228,14 @@ void AAWeaponBase::OnFireDelayEnd()
 	if (CanFire())
 	{
 		Fire();
+	}
+}
+
+void AAWeaponBase::MulticastOnFire_Implementation()
+{
+	if (FiringAudioComp && FiringAudioComp->Sound)
+	{
+		FiringAudioComp->Play();
 	}
 }
 
@@ -287,11 +286,17 @@ int AAWeaponBase::GetMaxAmmo() const
 
 void AAWeaponBase::OnRep_OwningPlayer()
 {
+	// Weapon sounds should be played in 2D for the player holding the weapon
 	if (OwningPlayer && OwningPlayer->IsLocallyControlled())
 	{
-		if (AmbientAudioComp) // Ambient sound should be played in 2D for the player holding the weapon
+		if (AmbientAudioComp) 
 		{
 			AmbientAudioComp->SetUISound(true);
+		}
+
+		if (FiringAudioComp)
+		{
+			FiringAudioComp->SetUISound(true);
 		}
 	}
 }

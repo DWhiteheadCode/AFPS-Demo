@@ -88,6 +88,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Components")
 	TObjectPtr<UAudioComponent> AmbientAudioComp;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Components")
+	TObjectPtr<UAudioComponent> FiringAudioComp;
+
 	// IDENTIFIER -----------------------------------------------------------------
 	UPROPERTY(EditDefaultsOnly, Replicated, Category="Weapon")
 	FGameplayTag Identifier;
@@ -132,14 +135,13 @@ protected:
 	UFUNCTION()
 	void OnFireDelayEnd();
 
+	UFUNCTION(NetMulticast, Unreliable)
+	void MulticastOnFire();
+
 	// EQUIPPED -------------------------------------------------------------------
 	UPROPERTY(ReplicatedUsing="OnRep_IsEquippedChanged")
 	bool bIsEquipped = false;
 
 	UFUNCTION()
 	void OnRep_IsEquippedChanged();
-
-	// SOUND ----------------------------------------------------------------------
-	UPROPERTY(EditDefaultsOnly, Category = "Sound")
-	TObjectPtr<USoundCue> FireSound;
 };
