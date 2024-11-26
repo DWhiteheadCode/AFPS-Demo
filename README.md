@@ -99,12 +99,58 @@ Now consider a player taking `90` damage, while they only have `7` `Armour` at t
 - The damage dealt to `Armour` (`7`) is subtracted from the total incoming damage `(90)`, leaving `83` damage that needs to be applied to the player's `Health`
 - So in summary: `7` damage is dealt to `Armour`, and `83` damage is dealt to `Health`
 
+# Sound Effects
+All sound effects have been used via Creative Commons 0. Most sounds have been used as-is, though some have been modified/combined using Audacity. Links are provided below to the components of all sound effects.
+
+## Weapons
+### Rail
+#### Firing
+Combination of:
+- https://freesound.org/people/Rickplayer/sounds/575804/
+- https://freesound.org/people/Funky_Audio/sounds/705494/
+
+#### Ambient Hum
+- https://freesound.org/people/HECKFRICKER/sounds/753297/
+
+### Rocket
+#### Firing
+- https://freesound.org/people/C3Sabertooth/sounds/480870/
+
+#### Explosion
+- https://freesound.org/people/modusmogulus/sounds/752630/
+
+#### Flight (Projectile Ambience)
+- https://freesound.org/people/qubodup/sounds/146770/
+
+### LG
+#### Firing
+- Yet to be implemented
+
+#### Ambient Hum
+- https://freesound.org/people/walllable/sounds/653454/
+
+## Pickups
+### Armour Shard
+- https://freesound.org/people/The-Sacha-Rush/sounds/400113/
+
+### Heavy Armour
+- https://freesound.org/people/CogFireStudios/sounds/420996/
+
+### Health Bubble
+- https://freesound.org/people/el_boss/sounds/665182/
+
+### Light Armour
+- https://freesound.org/people/magnuswaker/sounds/540092/
+	- Pitch shifted by -25%
+
+### Mega Health
+- https://freesound.org/people/xkeril/sounds/736851/
+
+
 # Planned Future Work
 ## Short-term
-- Update current features to work in multiplayer
+- Improve damage feedback (both for dealing damage and receiving it) via UI elements and sound effects
 - Create weapon pickups (and ammo pickups)
-
-## Mid-term
 - Allow players to edit their keybinds, mouse sensitivity, etc
 	- Save these between load/close
 - Create a very simple map
