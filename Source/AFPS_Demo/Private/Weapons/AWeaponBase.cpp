@@ -199,8 +199,11 @@ void AAWeaponBase::Fire()
 		Ammo--;
 
 		ClientAmmoChanged(Ammo, Ammo + 1);
+	}
 
-		MulticastOnFire();
+	if (FiringAudioComp && FiringAudioComp->Sound)
+	{
+		FiringAudioComp->Play();
 	}
 }
 
@@ -228,14 +231,6 @@ void AAWeaponBase::OnFireDelayEnd()
 	if (CanFire())
 	{
 		Fire();
-	}
-}
-
-void AAWeaponBase::MulticastOnFire_Implementation()
-{
-	if (FiringAudioComp && FiringAudioComp->Sound)
-	{
-		FiringAudioComp->Play();
 	}
 }
 

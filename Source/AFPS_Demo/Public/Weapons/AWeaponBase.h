@@ -135,9 +135,6 @@ protected:
 	UFUNCTION()
 	void OnFireDelayEnd();
 
-	UFUNCTION(NetMulticast, Unreliable)
-	void MulticastOnFire();
-
 	// EQUIPPED -------------------------------------------------------------------
 	UPROPERTY(ReplicatedUsing="OnRep_IsEquippedChanged")
 	bool bIsEquipped = false;
