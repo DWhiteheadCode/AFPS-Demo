@@ -140,4 +140,15 @@ protected:
 
 	UFUNCTION()
 	void OnRep_IsEquippedChanged();
+
+	// AUDIO -----------------------------------------------------------------------
+	UFUNCTION()
+	void PlayFiringAudioLoop();
+
+	UFUNCTION()
+	void StopFiringAudioLoop();
+
+	UFUNCTION()
+	bool FiringAudioIsLoop();
+
 };

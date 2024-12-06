@@ -136,6 +136,12 @@ void AAWeaponBase::SetIsTriggerHeld(const bool bInTriggerHeld)
 	{
 		bIsFiring = false;
 		GetWorldTimerManager().ClearTimer(TimerHandle_FireDelay);
+
+		if (FiringAudioIsLoop())
+		{
+			StopFiringAudioLoop();
+		}
+
 		return;
 	}
 
@@ -177,6 +183,12 @@ void AAWeaponBase::OnInitialFireDelayEnd()
 	FTimerDelegate Delegate;
 	Delegate.BindUFunction(this, "OnFireDelayEnd");
 	GetWorldTimerManager().SetTimer(TimerHandle_FireDelay, Delegate, FireDelay, true, 0.f);
+
+	// Start firing sound if it is a looping fire sound
+	if (FiringAudioIsLoop() && CanFire()) // Ensure there's actually ammo to start firing
+	{
+		PlayFiringAudioLoop();
+	}	
 }
 
 void AAWeaponBase::OnFireDelayEnd()
@@ -223,15 +235,65 @@ void AAWeaponBase::Fire()
 		Ammo--;
 	}
 
-	if (FiringAudioComp && FiringAudioComp->Sound)
+	// Play firing sound if it is a per-shot sound
+	if (!FiringAudioIsLoop())
 	{
-		FiringAudioComp->Play();
+		if (FiringAudioComp && FiringAudioComp->Sound)
+		{
+			FiringAudioComp->Play();
+		}
+	}
+
+	// End the firing audio loop if weapon has run out of ammo
+	if (Ammo == 0 && FiringAudioIsLoop())
+	{
+		StopFiringAudioLoop();
 	}
 }
 
 void AAWeaponBase::OnRep_Ammo(int OldAmmo)
 {
 	OnAmmoChanged.Broadcast(this, Ammo, OldAmmo);
+}
+
+void AAWeaponBase::PlayFiringAudioLoop()
+{
+	if (FiringAudioIsLoop())
+	{
+		if (FiringAudioComp && FiringAudioComp->Sound)
+		{
+			FiringAudioComp->Play();
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("PlayFiringAudioLoop() called on [%s], but FiringAudioIsLoop() returned false."), *GetNameSafe(this));
+	}
+}
+
+void AAWeaponBase::StopFiringAudioLoop()
+{
+	if (FiringAudioIsLoop())
+	{
+		if (FiringAudioComp && FiringAudioComp->Sound)
+		{
+			FiringAudioComp->Stop();
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("StopFiringAudioLoop() called on [%s], but FiringAudioIsLoop() returned false."), *GetNameSafe(this));
+	}
+}
+
+bool AAWeaponBase::FiringAudioIsLoop()
+{
+	if (FiringAudioComp && FiringAudioComp->Sound)
+	{
+		return FiringAudioComp->Sound->IsLooping();
+	}
+
+	return false;
 }
 
 bool AAWeaponBase::CanFire() const
