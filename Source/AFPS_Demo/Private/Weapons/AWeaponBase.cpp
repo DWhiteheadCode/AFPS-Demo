@@ -198,14 +198,12 @@ void AAWeaponBase::Fire()
 
 		LastFireTime = GameState->GetServerWorldTimeSeconds();
 		Ammo--;
-
-		ClientAmmoChanged(Ammo, Ammo + 1);
 	}
 }
 
-void AAWeaponBase::ClientAmmoChanged_Implementation(const int NewAmmo, const int OldAmmo)
+void AAWeaponBase::OnRep_Ammo(int OldAmmo)
 {
-	OnAmmoChanged.Broadcast(this, NewAmmo, OldAmmo);
+	OnAmmoChanged.Broadcast(this, Ammo, OldAmmo);
 }
 
 bool AAWeaponBase::CanFire() const

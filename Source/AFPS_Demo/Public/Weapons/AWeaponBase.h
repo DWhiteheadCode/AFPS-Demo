@@ -94,13 +94,11 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Ammo")
 	int StartingAmmo = 10;
 
-	UPROPERTY(Replicated)
+	UPROPERTY(ReplicatedUsing="OnRep_Ammo")
 	int Ammo = 0;
 
-	// Only used for UI changes so could maybe be unreliable, though packet loss could 
-	// result in UI showing the user has ammo when they don't, which would be jarring.
-	UFUNCTION(Client, Reliable) 
-	void ClientAmmoChanged(const int NewAmmo, const int OldAmmo);
+	UFUNCTION()
+	void OnRep_Ammo(int OldAmmo);
 
 	// FIRING ---------------------------------------------------------------------
 	UPROPERTY(EditAnywhere, Category = "Weapon")
