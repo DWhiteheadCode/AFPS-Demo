@@ -198,6 +198,7 @@ void AAWeaponBase::Fire()
 
 		LastFireTime = GameState->GetServerWorldTimeSeconds();
 		Ammo--;
+		OnRep_Ammo(Ammo+1);
 	}
 }
 
