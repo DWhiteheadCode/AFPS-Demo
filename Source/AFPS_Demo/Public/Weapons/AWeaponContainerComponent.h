@@ -121,16 +121,16 @@ protected:
 	TObjectPtr<UInputAction> FireAction;
 
 	UFUNCTION()
-	void OnFireStartInput();
+	void OnTriggerHeldInput();
 
 	UFUNCTION(Server, Reliable)
-	void ServerOnFireStartInput();
+	void ServerOnTriggerHeldInput();
 
 	UFUNCTION()
-	void OnFireStopInput();
+	void OnTriggerReleasedInput();
 
 	UFUNCTION(Server, Reliable)
-	void ServerOnFireStopInput();
+	void ServerOnTriggerReleasedInput();
 	
 	// Generic Weapon Swap ----
 	UFUNCTION()

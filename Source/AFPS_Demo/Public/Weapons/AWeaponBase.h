@@ -45,13 +45,8 @@ public:
 	FOnEquipStateChanged OnEquipStateChanged;
 
 	// FIRING ------------------------------------------------------------------
-	// Called when the user starts firing ("holding the trigger down")
 	UFUNCTION()
-	void StartFire(); 
-
-	// Called when the user stops firing ("releases the trigger")
-	UFUNCTION()
-	void StopFire();
+	void SetIsTriggerHeld(const bool bInTriggerHeld); 
 
 	// Called when the weapon actually fires (i.e. each time a bullet/projectile is shot)
 	UFUNCTION()
@@ -62,6 +57,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	bool IsFiring() const;
+
+	UFUNCTION(BlueprintCallable)
+	bool IsTriggerHeld() const;
 
 	UFUNCTION()
 	float GetRemainingFireDelay() const;
@@ -113,11 +111,14 @@ protected:
 	UPROPERTY(Replicated)
 	float LastFireTime = -1.f;
 
-	UPROPERTY(ReplicatedUsing="OnRep_IsFiring")
+	UPROPERTY(Replicated)
 	bool bIsFiring = false;
 
+	UPROPERTY(Replicated)
+	bool bIsTriggerHeld = false;
+
 	UFUNCTION()
-	void OnRep_IsFiring();
+	void OnInitialFireDelayEnd();
 
 	UFUNCTION()
 	void OnFireDelayEnd();

@@ -61,8 +61,8 @@ void UAWeaponContainerComponent::SetupWeaponBindings()
 		if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerController->InputComponent))
 		{
 			// Fire
-			EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Started, this, &UAWeaponContainerComponent::OnFireStartInput);
-			EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Completed, this, &UAWeaponContainerComponent::OnFireStopInput);
+			EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Started, this, &UAWeaponContainerComponent::OnTriggerHeldInput);
+			EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Completed, this, &UAWeaponContainerComponent::OnTriggerReleasedInput);
 
 			// Weapon Switching
 			EnhancedInputComponent->BindAction(EquipRocketAction, ETriggerEvent::Triggered, this, &UAWeaponContainerComponent::OnEquipRocketInput);
@@ -122,7 +122,7 @@ bool UAWeaponContainerComponent::InstantiateWeapon(TSubclassOf<AAWeaponBase> Wea
 	return true;
 }
 
-void UAWeaponContainerComponent::OnFireStartInput()
+void UAWeaponContainerComponent::OnTriggerHeldInput()
 {
 	if (RepData_WeaponSwap.WeaponEquipState == WeaponEquipState::NOT_EQUIPPED)
 	{
@@ -132,12 +132,12 @@ void UAWeaponContainerComponent::OnFireStartInput()
 
 	if (!GetOwner()->HasAuthority())
 	{
-		ServerOnFireStartInput();
+		ServerOnTriggerHeldInput();
 	}
 
 	if (RepData_WeaponSwap.WeaponEquipState == WeaponEquipState::READY && EquippedWeapon) // Start firing
 	{
-		EquippedWeapon->StartFire();
+		EquippedWeapon->SetIsTriggerHeld(true);
 	}
 	else // Prepare to fire when the swap ends
 	{
@@ -145,12 +145,12 @@ void UAWeaponContainerComponent::OnFireStartInput()
 	}
 }
 
-void UAWeaponContainerComponent::ServerOnFireStartInput_Implementation()
+void UAWeaponContainerComponent::ServerOnTriggerHeldInput_Implementation()
 {
-	OnFireStartInput();
+	OnTriggerHeldInput();
 }
 
-void UAWeaponContainerComponent::OnFireStopInput()
+void UAWeaponContainerComponent::OnTriggerReleasedInput()
 {
 	if (RepData_WeaponSwap.WeaponEquipState == WeaponEquipState::NOT_EQUIPPED)
 	{
@@ -160,12 +160,12 @@ void UAWeaponContainerComponent::OnFireStopInput()
 
 	if (!GetOwner()->HasAuthority())
 	{
-		ServerOnFireStopInput();
+		ServerOnTriggerReleasedInput();
 	}
 
-	if (RepData_WeaponSwap.WeaponEquipState == WeaponEquipState::READY && EquippedWeapon) // Start firing locally
+	if (RepData_WeaponSwap.WeaponEquipState == WeaponEquipState::READY && EquippedWeapon)
 	{
-		EquippedWeapon->StopFire();
+		EquippedWeapon->SetIsTriggerHeld(false);
 	}
 	else
 	{
@@ -173,9 +173,9 @@ void UAWeaponContainerComponent::OnFireStopInput()
 	}
 }
 
-void UAWeaponContainerComponent::ServerOnFireStopInput_Implementation()
+void UAWeaponContainerComponent::ServerOnTriggerReleasedInput_Implementation()
 {
-	OnFireStopInput();
+	OnTriggerReleasedInput();
 }
 
 void UAWeaponContainerComponent::ProcessSwapInput(FGameplayTag WeaponIdentifier)
@@ -227,11 +227,11 @@ void UAWeaponContainerComponent::ProcessSwapInput(FGameplayTag WeaponIdentifier)
 	if (EquippedWeapon)
 	{
 		const float PreSwapDelaySeconds = EquippedWeapon->GetRemainingFireDelay();
-		RepData_WeaponSwap.bShouldFireOnSwapEnd = EquippedWeapon->IsFiring();
+		RepData_WeaponSwap.bShouldFireOnSwapEnd = EquippedWeapon->IsTriggerHeld();
 
-		if (EquippedWeapon->IsFiring())
+		if (EquippedWeapon->IsTriggerHeld())
 		{
-			EquippedWeapon->StopFire();
+			EquippedWeapon->SetIsTriggerHeld(false);
 		}
 		
 		if (PreSwapDelaySeconds > 0.f) // Wait until EquippedWeapon finishes reloading to start the swap
@@ -334,7 +334,7 @@ void UAWeaponContainerComponent::OnWeaponEquipDelayEnd()
 
 	if (RepData_WeaponSwap.bShouldFireOnSwapEnd)
 	{
-		EquippedWeapon->StartFire();
+		EquippedWeapon->SetIsTriggerHeld(true);
 	}
 
 	RepData_WeaponSwap.WeaponEquipState = WeaponEquipState::READY;
