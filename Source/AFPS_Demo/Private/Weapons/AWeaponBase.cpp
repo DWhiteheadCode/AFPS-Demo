@@ -90,7 +90,7 @@ void AAWeaponBase::UnequipWeapon()
 	if (bIsFiring)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Weapon [%s] tried to unequip but it was still firing. Stopping fire."), *GetNameSafe(this));
-		StopFire();
+		SetIsTriggerHeld(false);
 	}
 
 	bIsEquipped = false;
@@ -103,13 +103,21 @@ void AAWeaponBase::OnRep_IsEquippedChanged()
 	OnEquipStateChanged.Broadcast(this, bIsEquipped);
 }
 
-// Note: It is the responsibility of the WeaponContainerComponent to call StartFire() from both the
+// Note: It is the responsibility of the WeaponContainerComponent to call this from both the
 // client and the server
-void AAWeaponBase::StartFire()
+void AAWeaponBase::SetIsTriggerHeld(const bool bInTriggerHeld)
 {
-	bIsFiring = true;
-	float InitialDelay = 0.f;
+	bIsTriggerHeld = bInTriggerHeld;
 
+	if (!bIsTriggerHeld)
+	{
+		bIsFiring = false;
+		GetWorldTimerManager().ClearTimer(TimerHandle_FireDelay);
+		return;
+	}
+
+	// Get the InitialDelay before the first shot can be fired
+	float InitialDelay = 0.f;
 	if (LastFireTime >= 0) // Weapon has been fired before
 	{
 		AGameStateBase* GameState = GetWorld()->GetGameState<AGameStateBase>();
@@ -122,66 +130,30 @@ void AAWeaponBase::StartFire()
 		// Try to get the CurrentTime (server). If this fails (as GameState hasn't replicated), assume the weapon was just fired
 		const float CurrentTime = (GameState) ? GameState->GetServerWorldTimeSeconds() : LastFireTime;
 		const float TimeSinceLastShot = CurrentTime - LastFireTime;
-		
+
 		if (TimeSinceLastShot < FireDelay) // Weapon is still "reloading" (between bullets)
 		{
 			InitialDelay = FireDelay - TimeSinceLastShot;
 		}
 	}
 
-	FTimerDelegate Delegate;
-	Delegate.BindUFunction(this, "OnFireDelayEnd");
-	GetWorldTimerManager().SetTimer(TimerHandle_FireDelay, Delegate, FireDelay, true, InitialDelay);
-}
-
-// Note: It is the responsibility of the WeaponContainerComponent to call StopFire() from both the
-// client and the server
-void AAWeaponBase::StopFire()
-{
-	bIsFiring = false;
-	GetWorldTimerManager().ClearTimer(TimerHandle_FireDelay);
-}
-
-void AAWeaponBase::OnRep_IsFiring()
-{
-	if (bIsFiring)
+	if (InitialDelay == 0.f)
 	{
-		StartFire();
+		OnInitialFireDelayEnd();
 	}
 	else
 	{
-		StopFire();
+		GetWorldTimerManager().SetTimer(TimerHandle_FireDelay, this, &AAWeaponBase::OnInitialFireDelayEnd, InitialDelay);
 	}
 }
 
-void AAWeaponBase::Fire()
+void AAWeaponBase::OnInitialFireDelayEnd()
 {
-	if (!CanFire())
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Tried to fire weapon [%s], but CanFire() returned false"), *GetNameSafe(this));
-		return;
-	}
-	
-	if (HasAuthority())
-	{
-		AGameStateBase* GameState = GetWorld()->GetGameState<AGameStateBase>();
+	bIsFiring = true;
 
-		if (!GameState)
-		{
-			UE_LOG(LogTemp, Error, TEXT("Server failed to retrieve GameState in [%s]::Fire(). Weapon won't fire."), *GetNameSafe(this));
-			return;
-		}
-		
-		LastFireTime = GameState->GetServerWorldTimeSeconds();
-		Ammo--;
-
-		ClientAmmoChanged(Ammo, Ammo + 1);
-	}
-}
-
-void AAWeaponBase::ClientAmmoChanged_Implementation(const int NewAmmo, const int OldAmmo)
-{
-	OnAmmoChanged.Broadcast(this, NewAmmo, OldAmmo);
+	FTimerDelegate Delegate;
+	Delegate.BindUFunction(this, "OnFireDelayEnd");
+	GetWorldTimerManager().SetTimer(TimerHandle_FireDelay, Delegate, FireDelay, true, 0.f);
 }
 
 void AAWeaponBase::OnFireDelayEnd()
@@ -206,6 +178,34 @@ void AAWeaponBase::OnFireDelayEnd()
 	}
 }
 
+void AAWeaponBase::Fire()
+{
+	if (!CanFire())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Tried to fire weapon [%s], but CanFire() returned false"), *GetNameSafe(this));
+		return;
+	}
+
+	if (HasAuthority())
+	{
+		AGameStateBase* GameState = GetWorld()->GetGameState<AGameStateBase>();
+
+		if (!GameState)
+		{
+			UE_LOG(LogTemp, Error, TEXT("Server failed to retrieve GameState in [%s]::Fire(). Weapon won't fire."), *GetNameSafe(this));
+			return;
+		}
+
+		LastFireTime = GameState->GetServerWorldTimeSeconds();
+		Ammo--;
+	}
+}
+
+void AAWeaponBase::OnRep_Ammo(int OldAmmo)
+{
+	OnAmmoChanged.Broadcast(this, Ammo, OldAmmo);
+}
+
 bool AAWeaponBase::CanFire() const
 {
 	return Ammo > 0;
@@ -214,6 +214,11 @@ bool AAWeaponBase::CanFire() const
 bool AAWeaponBase::IsFiring() const
 {
 	return bIsFiring;
+}
+
+bool AAWeaponBase::IsTriggerHeld() const
+{
+	return bIsTriggerHeld;
 }
 
 bool AAWeaponBase::IsEquipped() const
