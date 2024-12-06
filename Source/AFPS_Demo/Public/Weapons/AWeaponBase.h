@@ -49,13 +49,8 @@ public:
 	FOnEquipStateChanged OnEquipStateChanged;
 
 	// FIRING ------------------------------------------------------------------
-	// Called when the user starts firing ("holding the trigger down")
 	UFUNCTION()
-	void StartFire(); 
-
-	// Called when the user stops firing ("releases the trigger")
-	UFUNCTION()
-	void StopFire();
+	void SetIsTriggerHeld(const bool bInTriggerHeld); 
 
 	// Called when the weapon actually fires (i.e. each time a bullet/projectile is shot)
 	UFUNCTION()
@@ -66,6 +61,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	bool IsFiring() const;
+
+	UFUNCTION(BlueprintCallable)
+	bool IsTriggerHeld() const;
 
 	UFUNCTION()
 	float GetRemainingFireDelay() const;
@@ -109,13 +107,11 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Ammo")
 	int StartingAmmo = 10;
 
-	UPROPERTY(Replicated)
+	UPROPERTY(ReplicatedUsing="OnRep_Ammo")
 	int Ammo = 0;
 
-	// Only used for UI changes so could maybe be unreliable, though packet loss could 
-	// result in UI showing the user has ammo when they don't, which would be jarring.
-	UFUNCTION(Client, Reliable) 
-	void ClientAmmoChanged(const int NewAmmo, const int OldAmmo);
+	UFUNCTION()
+	void OnRep_Ammo(int OldAmmo);
 
 	// FIRING ---------------------------------------------------------------------
 	UPROPERTY(EditAnywhere, Category = "Weapon")
@@ -126,11 +122,14 @@ protected:
 	UPROPERTY(Replicated)
 	float LastFireTime = -1.f;
 
-	UPROPERTY(ReplicatedUsing="OnRep_IsFiring")
+	UPROPERTY(Replicated)
 	bool bIsFiring = false;
 
+	UPROPERTY(Replicated)
+	bool bIsTriggerHeld = false;
+
 	UFUNCTION()
-	void OnRep_IsFiring();
+	void OnInitialFireDelayEnd();
 
 	UFUNCTION()
 	void OnFireDelayEnd();
