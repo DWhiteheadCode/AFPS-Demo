@@ -3,9 +3,11 @@
 #include "Components/StaticMeshComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "GameFramework/GameStateBase.h"
+#include "Sound/SoundCue.h"
+#include "Components/AudioComponent.h"
+#include "Components/SkeletalMeshComponent.h"
 
 #include "APlayerCharacter.h"
-#include "Components/SkeletalMeshComponent.h"
 
 #include "../AFPS_Demo.h"
 
@@ -16,6 +18,14 @@ AAWeaponBase::AAWeaponBase()
 	MeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	RootComponent = MeshComp;
+
+	AmbientAudioComp = CreateDefaultSubobject<UAudioComponent>("AmbientAudioComp");
+	AmbientAudioComp->bAutoActivate = false;
+	AmbientAudioComp->SetupAttachment(RootComponent);
+
+	FiringAudioComp = CreateDefaultSubobject<UAudioComponent>("FiringAudioComp");
+	FiringAudioComp->bAutoActivate = false;
+	FiringAudioComp->SetupAttachment(RootComponent);
 
 	bReplicates = true;
 }
@@ -60,6 +70,7 @@ bool AAWeaponBase::SetOwningPlayer(AAPlayerCharacter* InOwner)
 	if (AttachToComponent( InMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("hand_r")) )
 	{
 		OwningPlayer = InOwner;
+		OnRep_OwningPlayer();
 		return true;
 	}
 
@@ -101,6 +112,18 @@ void AAWeaponBase::OnRep_IsEquippedChanged()
 {
 	MeshComp->SetVisibility(bIsEquipped, true);
 	OnEquipStateChanged.Broadcast(this, bIsEquipped);
+
+	if (AmbientAudioComp && AmbientAudioComp->Sound)
+	{
+		if (bIsEquipped)
+		{
+			AmbientAudioComp->Activate();
+		}
+		else
+		{
+			AmbientAudioComp->Deactivate();
+		}
+	}
 }
 
 // Note: It is the responsibility of the WeaponContainerComponent to call this from both the
@@ -113,6 +136,12 @@ void AAWeaponBase::SetIsTriggerHeld(const bool bInTriggerHeld)
 	{
 		bIsFiring = false;
 		GetWorldTimerManager().ClearTimer(TimerHandle_FireDelay);
+
+		if (FiringAudioIsLoop())
+		{
+			StopFiringAudioLoop();
+		}
+
 		return;
 	}
 
@@ -154,6 +183,12 @@ void AAWeaponBase::OnInitialFireDelayEnd()
 	FTimerDelegate Delegate;
 	Delegate.BindUFunction(this, "OnFireDelayEnd");
 	GetWorldTimerManager().SetTimer(TimerHandle_FireDelay, Delegate, FireDelay, true, 0.f);
+
+	// Start firing sound if it is a looping fire sound
+	if (FiringAudioIsLoop() && CanFire()) // Ensure there's actually ammo to start firing
+	{
+		PlayFiringAudioLoop();
+	}	
 }
 
 void AAWeaponBase::OnFireDelayEnd()
@@ -200,11 +235,66 @@ void AAWeaponBase::Fire()
 		Ammo--;
 		OnRep_Ammo(Ammo+1);
 	}
+
+	// Play firing sound if it is a per-shot sound
+	if (!FiringAudioIsLoop())
+	{
+		if (FiringAudioComp && FiringAudioComp->Sound)
+		{
+			FiringAudioComp->Play();
+		}
+	}
+
+	// End the firing audio loop if weapon has run out of ammo
+	if (Ammo == 0 && FiringAudioIsLoop())
+	{
+		StopFiringAudioLoop();
+	}
 }
 
 void AAWeaponBase::OnRep_Ammo(int OldAmmo)
 {
 	OnAmmoChanged.Broadcast(this, Ammo, OldAmmo);
+}
+
+void AAWeaponBase::PlayFiringAudioLoop()
+{
+	if (FiringAudioIsLoop())
+	{
+		if (FiringAudioComp && FiringAudioComp->Sound)
+		{
+			FiringAudioComp->Play();
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("PlayFiringAudioLoop() called on [%s], but FiringAudioIsLoop() returned false."), *GetNameSafe(this));
+	}
+}
+
+void AAWeaponBase::StopFiringAudioLoop()
+{
+	if (FiringAudioIsLoop())
+	{
+		if (FiringAudioComp && FiringAudioComp->Sound)
+		{
+			FiringAudioComp->Stop();
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("StopFiringAudioLoop() called on [%s], but FiringAudioIsLoop() returned false."), *GetNameSafe(this));
+	}
+}
+
+bool AAWeaponBase::FiringAudioIsLoop()
+{
+	if (FiringAudioComp && FiringAudioComp->Sound)
+	{
+		return FiringAudioComp->Sound->IsLooping();
+	}
+
+	return false;
 }
 
 bool AAWeaponBase::CanFire() const
@@ -227,6 +317,21 @@ bool AAWeaponBase::IsEquipped() const
 	return bIsEquipped;
 }
 
+bool AAWeaponBase::IsLocallyOwned() const
+{
+	if (OwningPlayer)
+	{
+		AController* Controller = OwningPlayer->GetController();
+
+		if (Controller && Controller->IsLocalPlayerController())
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
 FGameplayTag AAWeaponBase::GetIdentifier() const
 {
 	return Identifier;
@@ -240,6 +345,23 @@ int AAWeaponBase::GetAmmo() const
 int AAWeaponBase::GetMaxAmmo() const
 {
 	return MaxAmmo;
+}
+
+void AAWeaponBase::OnRep_OwningPlayer()
+{
+	// Weapon sounds should be played in 2D for the player holding the weapon
+	if (OwningPlayer && OwningPlayer->IsLocallyControlled())
+	{
+		if (AmbientAudioComp) 
+		{
+			AmbientAudioComp->SetUISound(true);
+		}
+
+		if (FiringAudioComp)
+		{
+			FiringAudioComp->SetUISound(true);
+		}
+	}
 }
 
 float AAWeaponBase::GetRemainingFireDelay() const

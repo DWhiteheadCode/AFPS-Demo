@@ -8,6 +8,7 @@
 #include "AWeaponBase.generated.h"
 
 class UStaticMeshComponent;
+class USoundCue;
 
 class AAPlayerCharacter;
 
@@ -27,6 +28,9 @@ public:
 
 	UFUNCTION()
 	bool SetOwningPlayer(AAPlayerCharacter* InOwner);
+
+	UFUNCTION()
+	bool IsLocallyOwned() const;
 
 	UFUNCTION(BlueprintCallable)
 	FGameplayTag GetIdentifier() const;
@@ -79,13 +83,22 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category="Components")
 	TObjectPtr<UStaticMeshComponent> MeshComp;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Components")
+	TObjectPtr<UAudioComponent> AmbientAudioComp;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Components")
+	TObjectPtr<UAudioComponent> FiringAudioComp;
+
 	// IDENTIFIER -----------------------------------------------------------------
 	UPROPERTY(EditDefaultsOnly, Replicated, Category="Weapon")
 	FGameplayTag Identifier;
 
 	// OWNER ----------------------------------------------------------------------
-	UPROPERTY(Replicated)
+	UPROPERTY(ReplicatedUsing="OnRep_OwningPlayer")
 	TObjectPtr<AAPlayerCharacter> OwningPlayer;
+
+	UFUNCTION()
+	void OnRep_OwningPlayer();
 
 	// AMMO -----------------------------------------------------------------------
 	UPROPERTY(EditAnywhere, Category = "Ammo")
@@ -127,5 +140,15 @@ protected:
 
 	UFUNCTION()
 	void OnRep_IsEquippedChanged();
+
+	// AUDIO -----------------------------------------------------------------------
+	UFUNCTION()
+	void PlayFiringAudioLoop();
+
+	UFUNCTION()
+	void StopFiringAudioLoop();
+
+	UFUNCTION()
+	bool FiringAudioIsLoop();
 
 };

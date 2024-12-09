@@ -3,8 +3,11 @@
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "Kismet/GameplayStatics.h"
 #include "Components/SphereComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/AudioComponent.h"
+#include "Sound/SoundCue.h"
 
 #include "AStackComponent.h"
 
@@ -25,6 +28,9 @@ AAProjectile_Rocket::AAProjectile_Rocket()
     ProjectileMovementComp = CreateDefaultSubobject<UProjectileMovementComponent>("ProjectileMoveComp");
 	ProjectileMovementComp->ProjectileGravityScale = 0.f;
 	ProjectileMovementComp->InitialSpeed = 1000.f;
+
+	AudioComp = CreateDefaultSubobject<UAudioComponent>("AuidioComp");
+	AudioComp->SetupAttachment(RootComponent);
 
 	bReplicates = true;
 }
@@ -51,6 +57,9 @@ void AAProjectile_Rocket::Detonate()
 {
 	DrawDebugSphere(GetWorld(), GetActorLocation(), CloseFalloffRange, 16, FColor::White, false, 5.f, 0, 1.f);
 	DrawDebugSphere(GetWorld(), GetActorLocation(), FarFalloffRange, 16, FColor::White, false, 5.f, 0, 1.f);
+
+	AudioComp->Stop();
+	UGameplayStatics::PlaySoundAtLocation(this, DetonationSound, GetActorLocation());
 
 	if (HasAuthority())
 	{

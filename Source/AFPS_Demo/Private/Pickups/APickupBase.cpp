@@ -3,6 +3,8 @@
 #include "Components/StaticMeshComponent.h"
 #include "Components/SphereComponent.h"
 #include "Net/UnrealNetwork.h"
+#include "Kismet/GameplayStatics.h"
+#include "Sound/SoundCue.h"
 
 AAPickupBase::AAPickupBase()
 {
@@ -94,6 +96,14 @@ void AAPickupBase::OnRep_IsActive()
 {
 	SetActorEnableCollision(bIsActive);
 	MeshComp->SetVisibility(bIsActive, true);
+
+	if (!bIsActive) // Pickup was just picked up
+	{
+		if (PickupSound)
+		{
+			UGameplayStatics::PlaySoundAtLocation(this, PickupSound, GetActorLocation());
+		}
+	}
 }
 
 void AAPickupBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
