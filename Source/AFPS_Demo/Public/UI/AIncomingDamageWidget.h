@@ -6,6 +6,8 @@
 #include "Blueprint/UserWidget.h"
 #include "AIncomingDamageWidget.generated.h"
 
+class UCanvasPanelSlot;
+
 /**
  * 
  */
@@ -18,6 +20,12 @@ public:
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 
 protected:
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category="UI")
+	float Radius = 250.f;
+	
 	UPROPERTY(BlueprintReadOnly, Category = "UI", meta = (ExposeOnSpawn=true))
 	FVector DamageSourceLocation;
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void SetRelativeAngle(const float InAngle);
 };
