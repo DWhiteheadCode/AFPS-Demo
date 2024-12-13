@@ -2,6 +2,8 @@
 
 #include "Net/UnrealNetwork.h"
 
+#include "APlayerController.h"
+
 UAStackComponent::UAStackComponent()
 {
 	SetIsReplicatedByDefault(true);
@@ -83,13 +85,27 @@ bool UAStackComponent::ApplyDamage(int Amount, AActor* InstigatorActor)
 
 	const int ActualHealthDelta = NewHealth - OldHealth;
 	const int ActualArmourDelta = NewArmour - OldArmour;
+	const int TotalDelta = ActualHealthDelta + ActualArmourDelta;
+	
 
 	// Actually apply changes if on server.
 	if (GetOwner()->HasAuthority())
 	{
 		Health = NewHealth;
 		Armour = NewArmour;
-		MulticastStackChanged(this, InstigatorActor, NewHealth, ActualHealthDelta, NewArmour, ActualArmourDelta, (ActualHealthDelta + ActualArmourDelta));
+		MulticastStackChanged(this, InstigatorActor, NewHealth, ActualHealthDelta, NewArmour, ActualArmourDelta, TotalDelta);
+
+		// Notify player if damage was dealt
+		if (TotalDelta < 0)
+		{			
+			if (APawn* InstigatorPawn = Cast<APawn>(InstigatorActor))
+			{
+				if (AAPlayerController* InstigatorController = Cast<AAPlayerController>(InstigatorPawn->GetController()))
+				{
+					InstigatorController->ClientOnDamageDealt(this, -TotalDelta);
+				}
+			}
+		}
 
 		if (Health == 0)
 		{
