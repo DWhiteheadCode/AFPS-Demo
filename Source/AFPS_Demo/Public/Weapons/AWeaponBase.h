@@ -107,6 +107,9 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Ammo")
 	int StartingAmmo = 10;
 
+	UPROPERTY(EditAnywhere, Category = "Ammo")
+	bool bInfiniteAmmo = false;
+
 	UPROPERTY(ReplicatedUsing="OnRep_Ammo")
 	int Ammo = 0;
 
