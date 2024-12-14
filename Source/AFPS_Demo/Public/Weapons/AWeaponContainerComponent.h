@@ -120,13 +120,13 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	TObjectPtr<UInputAction> FireAction;
 
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable)
 	void OnTriggerHeldInput();
 
 	UFUNCTION(Server, Reliable)
 	void ServerOnTriggerHeldInput();
 
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable)
 	void OnTriggerReleasedInput();
 
 	UFUNCTION(Server, Reliable)
