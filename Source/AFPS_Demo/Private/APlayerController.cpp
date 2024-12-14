@@ -75,7 +75,7 @@ void AAPlayerController::PlayIncomingDamageSound(AAPlayerController* OwningPlaye
 
 	DamageSoundLocation = ViewLocation + (IncomingDamageSoundDistance * DamageSoundDirection);
 
-	DrawDebugSphere(GetWorld(), DamageSoundLocation, 5.f, 16, FColor::White, false, 2.f, 0, 1.f);
+	//DrawDebugSphere(GetWorld(), DamageSoundLocation, 5.f, 16, FColor::White, false, 2.f, 0, 1.f);
 
 	UGameplayStatics::PlaySoundAtLocation(this, IncomingDamageSound, DamageSoundLocation);
 }
