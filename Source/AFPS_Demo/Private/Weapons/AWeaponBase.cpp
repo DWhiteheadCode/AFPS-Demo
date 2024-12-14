@@ -232,8 +232,12 @@ void AAWeaponBase::Fire()
 		}
 
 		LastFireTime = GameState->GetServerWorldTimeSeconds();
-		Ammo--;
-		OnRep_Ammo(Ammo+1);
+
+		if (!bInfiniteAmmo)
+		{
+			Ammo--;
+			OnRep_Ammo(Ammo + 1);
+		}		
 	}
 
 	// Play firing sound if it is a per-shot sound
