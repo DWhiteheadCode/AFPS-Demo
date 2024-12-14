@@ -147,6 +147,14 @@ Combination of:
 - https://freesound.org/people/xkeril/sounds/736851/
 
 
+## Damage Feedback
+### Incoming Damage
+- https://freesound.org/people/ImmergoMedia/sounds/689666/
+
+### Outgoing Damage (Hitmarker)
+- https://freesound.org/people/Raclure/sounds/458867/
+
+
 # Planned Future Work
 ## Short-term
 - Improve damage feedback (both for dealing damage and receiving it) via UI elements and sound effects
