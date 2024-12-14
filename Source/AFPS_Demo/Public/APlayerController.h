@@ -4,6 +4,8 @@
 #include "GameFramework/PlayerController.h"
 #include "APlayerController.generated.h"
 
+class USoundCue;
+
 class UAStackComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(
@@ -30,6 +32,8 @@ class AFPS_DEMO_API AAPlayerController : public APlayerController
 	GENERATED_BODY()
 	
 public:
+	void BeginPlay() override;
+
 	// DAMAGE RECEIVED ----------------------------------------------------------------------
 	void SetPawn(APawn* NewPawn) override;
 
@@ -46,5 +50,15 @@ public:
 
 	UPROPERTY(BlueprintAssignable)
 	FOnDamageDealt OnDamageDealt;
+
+protected:
+	UFUNCTION()
+	void PlayIncomingDamageSound(AAPlayerController* OwningPlayer, UAStackComponent* StackComp, AActor* InstigatorActor, int DamageAmount);
+
+	UPROPERTY(EditDefaultsOnly, Category="Sound")
+	TObjectPtr<USoundCue> IncomingDamageSound;
+
+	UPROPERTY(EditDefaultsOnly, Category="Sound")
+	float IncomingDamageSoundDistance = 250.f;
 
 };
