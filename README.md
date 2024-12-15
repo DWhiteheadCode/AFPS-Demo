@@ -50,7 +50,7 @@ If the player is holding the trigger when the equip ends, the new weapon will st
 The lightning gun is a high-fire-rate, low-damage (per hit), non-penetrating hitscan weapon with a short-medium range. 
 
 ### Rail Gun
-The lightning gun is a slow-fire-rate, high-damage (per hit), penetrating hitscan weapon with a long range. 
+The rail gun is a slow-fire-rate, high-damage (per hit), penetrating hitscan weapon with a long range. 
 
 ### Rocket Launcher
 The rocket launcher is a projectile weapon with a slow projectile travel-speed and no bullet-drop. It deals explosive damage in a radius around it, dealing more damage the closer to the point of detonation the target is. 
