@@ -159,8 +159,6 @@ Combination of:
 
 
 # Planned Future Work
-## Short-term
-- Improve damage feedback (both for dealing damage and receiving it) via UI elements and sound effects
 - Create weapon pickups (and ammo pickups)
 - Allow players to edit their keybinds, mouse sensitivity, etc
 	- Save these between load/close
@@ -169,8 +167,6 @@ Combination of:
 - Create basic game mode logic 
 - Create a main menu -> game flow
 - Create post-game-menu flow 
-
-## Long-term
 - Add knockback to weapons
 - Create remaining weapons
 - Create powerups
