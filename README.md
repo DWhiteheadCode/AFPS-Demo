@@ -124,7 +124,10 @@ Combination of:
 
 ### LG
 #### Firing
-- Yet to be implemented
+Combination of:
+- https://freesound.org/people/Wakerone/sounds/393820/
+- https://freesound.org/people/pjborg/sounds/416322/
+- https://freesound.org/people/TRP/sounds/573829/
 
 #### Ambient Hum
 - https://freesound.org/people/walllable/sounds/653454/
