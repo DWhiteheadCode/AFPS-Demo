@@ -303,7 +303,7 @@ bool AAWeaponBase::FiringAudioIsLoop()
 
 bool AAWeaponBase::CanFire() const
 {
-	return Ammo > 0;
+	return Ammo > 0 || bInfiniteAmmo;
 }
 
 bool AAWeaponBase::IsFiring() const
