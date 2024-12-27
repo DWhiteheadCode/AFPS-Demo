@@ -158,6 +158,12 @@ Combination of:
 - https://freesound.org/people/Raclure/sounds/458867/
 
 
+# Known Issues
+- Rocket projectile:
+	- Obtains actors that overlap a sphere to apply damage, however damage calculation uses the target's `GetActorLocation()`. This means the distance used to calculate damage is NOT the distance between the rocket and the closest part of the target.
+	- `IsDamagePathBlocked()` uses a single line trace, meaning damage may not be dealt even if there is a valid line-of-sight to a different part of the target.
+- `M_IncomingDamageIndicator`'s `AmountOfCircle` parameter must be set to `0.25`, otherwise the `Angle` parameter doesn't correctly set the visible segment's direction.
+
 # Planned Future Work
 - Create weapon pickups (and ammo pickups)
 - Allow players to edit their keybinds, mouse sensitivity, etc
