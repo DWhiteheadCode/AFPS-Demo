@@ -2,6 +2,12 @@
 
 #include "Weapons/AWeaponContainerComponent.h"
 
+AAPickup_Weapon::AAPickup_Weapon()
+{
+	CooldownDuration = 5.f;
+	bRespawns = true;
+}
+
 bool AAPickup_Weapon::CanPickup(AActor* OtherActor)
 {
 	if (!Super::CanPickup(OtherActor))

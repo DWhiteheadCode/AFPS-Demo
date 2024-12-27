@@ -15,6 +15,9 @@ class AFPS_DEMO_API AAPickup_Weapon : public AAPickupBase
 {
 	GENERATED_BODY()
 	
+public:
+	AAPickup_Weapon();
+
 protected:
 	// PICKUP LOGIC -------------------------------------------------------
 	bool CanPickup(AActor* OtherActor) override;
