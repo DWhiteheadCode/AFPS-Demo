@@ -80,6 +80,12 @@ bool AAWeaponBase::SetOwningPlayer(AAPlayerCharacter* InOwner)
 
 void AAWeaponBase::EquipWeapon()
 {
+	if (!bIsEquippable)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Attempted to equip [%s], but bIsEquippable was false"), *GetNameSafe(this));
+		return;
+	}
+
 	if (bIsEquipped)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Weapon [%s] tried to equip while already equipped"), *GetNameSafe(this));
@@ -106,6 +112,16 @@ void AAWeaponBase::UnequipWeapon()
 
 	bIsEquipped = false;
 	OnRep_IsEquippedChanged();
+}
+
+bool AAWeaponBase::IsEquippable() const
+{
+	return bIsEquippable;
+}
+
+void AAWeaponBase::SetIsEquippable(bool bInEquippable)
+{
+	bIsEquippable = bInEquippable;
 }
 
 void AAWeaponBase::OnRep_IsEquippedChanged()
@@ -382,6 +398,7 @@ void AAWeaponBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLife
 	DOREPLIFETIME(AAWeaponBase, Ammo);
 	DOREPLIFETIME(AAWeaponBase, LastFireTime);
 	DOREPLIFETIME(AAWeaponBase, bIsFiring);
+	DOREPLIFETIME(AAWeaponBase, bIsEquippable);
 	DOREPLIFETIME(AAWeaponBase, bIsEquipped);
 	DOREPLIFETIME(AAWeaponBase, OwningPlayer);
 }

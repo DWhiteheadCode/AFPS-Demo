@@ -52,14 +52,14 @@ public:
 
 	void EquipDefaultWeapon();
 
-	//UPROPERTY(BlueprintAssignable)
-	//FOnWeaponAdded OnWeaponAdded;
-
 	UPROPERTY(BlueprintAssignable)
 	FOnWeaponsReplicated OnWeaponsReplicated;
 
-	//UFUNCTION(Client, Unreliable)
-	//void ClientOnWeaponAdded(AAWeaponBase* NewWeapon);
+	UFUNCTION()
+	bool HasWeapon(FGameplayTag WeaponIdentifier) const;
+
+	UFUNCTION()
+	bool MakeEquippable(FGameplayTag WeaponIdentifier);
 
 protected:
 	virtual void BeginPlay() override;

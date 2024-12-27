@@ -35,12 +35,18 @@ public:
 	UFUNCTION(BlueprintCallable)
 	FGameplayTag GetIdentifier() const;
 
-	// EQUIP / UNEQUIP --------------------------------------------------------
+	// EQUIP / UNEQUIP --------------------------------------------------------	
 	UFUNCTION()
 	void EquipWeapon();	
 
 	UFUNCTION()
 	void UnequipWeapon();
+
+	UFUNCTION()
+	bool IsEquippable() const;
+
+	UFUNCTION()
+	void SetIsEquippable(bool bInEquippable);
 
 	UFUNCTION(BlueprintCallable)
 	bool IsEquipped() const;
@@ -138,6 +144,9 @@ protected:
 	void OnFireDelayEnd();
 
 	// EQUIPPED -------------------------------------------------------------------
+	UPROPERTY(Replicated)
+	bool bIsEquippable = false;
+	
 	UPROPERTY(ReplicatedUsing="OnRep_IsEquippedChanged")
 	bool bIsEquipped = false;
 
