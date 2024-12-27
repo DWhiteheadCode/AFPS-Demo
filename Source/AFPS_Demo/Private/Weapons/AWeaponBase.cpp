@@ -368,9 +368,65 @@ int AAWeaponBase::GetAmmo() const
 	return Ammo;
 }
 
+int AAWeaponBase::GetStartingAmmo() const
+{
+	return StartingAmmo;
+}
+
 int AAWeaponBase::GetMaxAmmo() const
 {
 	return MaxAmmo;
+}
+
+int AAWeaponBase::GetAmmoIncrement() const
+{
+	return AmmoIncrement;
+}
+
+void AAWeaponBase::AddAmmo(const int InAmount)
+{
+	if (!HasAuthority())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Client tried to add ammo to weapon [%s]"), *GetNameSafe(this));
+		return;
+	}
+
+	if (InAmount < 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Tried to add negative [%d] ammo to weapon [%s]"), InAmount, *GetNameSafe(this));
+		return;
+	}	
+
+	const int OldAmmo = Ammo;
+	Ammo = FMath::Min(MaxAmmo, Ammo + InAmount);
+
+	OnRep_Ammo(OldAmmo);
+}
+
+void AAWeaponBase::SetAmmo(const int InAmount)
+{
+	if (!HasAuthority())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Client attempted to set ammo for [%s]"), *GetNameSafe(this));
+		return;
+	}
+
+	if (Ammo < 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Attempted to set ammo for [%s] to a negative value [%d]."), *GetNameSafe(this), InAmount);
+		return;
+	}
+
+	if (InAmount > MaxAmmo)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Attempted to set ammo for [%s] to [%d], which is greater than MaxAmmo [%d]."), *GetNameSafe(this), InAmount, MaxAmmo);
+		return;
+	}
+
+	const int OldAmmo = Ammo;
+	Ammo = InAmount;
+
+	OnRep_Ammo(OldAmmo);
 }
 
 void AAWeaponBase::OnRep_OwningPlayer()

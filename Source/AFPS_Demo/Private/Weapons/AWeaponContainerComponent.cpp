@@ -406,19 +406,6 @@ bool UAWeaponContainerComponent::HasWeapon(FGameplayTag WeaponIdentifier) const
 	return false;
 }
 
-bool UAWeaponContainerComponent::MakeEquippable(FGameplayTag WeaponIdentifier)
-{
-	AAWeaponBase* Weapon = GetWeapon(WeaponIdentifier);
-
-	if (Weapon)
-	{
-		Weapon->SetIsEquippable(true);
-		return true;
-	}
-
-	return false;
-}
-
 /*
 void UAWeaponContainerComponent::ClientOnWeaponAdded_Implementation(AAWeaponBase* NewWeapon)
 {

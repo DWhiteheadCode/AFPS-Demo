@@ -1,6 +1,7 @@
 #include "Pickups/APickup_Weapon.h"
 
 #include "Weapons/AWeaponContainerComponent.h"
+#include "Weapons/AWeaponBase.h"
 
 AAPickup_Weapon::AAPickup_Weapon()
 {
@@ -53,8 +54,26 @@ void AAPickup_Weapon::Pickup(AActor* OtherActor)
 		return;
 	}
 
-	if (!WeaponComp->MakeEquippable(WeaponIdentifier))
+	AAWeaponBase* Weapon = WeaponComp->GetWeapon(WeaponIdentifier);
+	if (!Weapon)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Pickup [%s] failed to make weapon [%s] equippable"), *GetNameSafe(this), *(WeaponIdentifier.ToString()));
+		UE_LOG(LogTemp, Warning, TEXT("[%s] picked up [%s], but their WeaponComp didn't have a Weapon matching the ID [%s]"), *GetNameSafe(OtherActor), *GetNameSafe(this), *(WeaponIdentifier.ToString()));
+		return;
+	}
+
+	if (Weapon->IsEquippable()) // OtherActor already has this weapon, so add ammo
+	{
+		if (Weapon->GetAmmo() < Weapon->GetStartingAmmo())
+		{
+			Weapon->SetAmmo( Weapon->GetStartingAmmo() );
+		}
+		else
+		{
+			Weapon->AddAmmo(Weapon->GetAmmoIncrement());
+		}
+	}
+	else
+	{
+		Weapon->SetIsEquippable(true);
 	}
 }

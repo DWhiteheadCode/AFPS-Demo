@@ -59,7 +59,7 @@ public:
 	bool HasWeapon(FGameplayTag WeaponIdentifier) const;
 
 	UFUNCTION()
-	bool MakeEquippable(FGameplayTag WeaponIdentifier);
+	AAWeaponBase* GetWeapon(const FGameplayTag WeaponIdentifier) const;
 
 protected:
 	virtual void BeginPlay() override;
@@ -83,9 +83,6 @@ protected:
 
 	UFUNCTION()
 	bool InstantiateWeapon(TSubclassOf<AAWeaponBase> WeaponClass);
-
-	UFUNCTION()
-	AAWeaponBase* GetWeapon(const FGameplayTag WeaponIdentifier) const;
 
 	// WEAPON SWAPPING -------------------------------------------------------
 	UPROPERTY(EditAnywhere, Category = "Weapon Swapping")
