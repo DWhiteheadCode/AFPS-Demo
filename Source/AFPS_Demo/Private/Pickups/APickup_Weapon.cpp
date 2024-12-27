@@ -69,7 +69,7 @@ void AAPickup_Weapon::Pickup(AActor* OtherActor)
 		}
 		else
 		{
-			Weapon->AddAmmo(Weapon->GetAmmoIncrement());
+			Weapon->AddAmmo(AmmoIncrement);
 		}
 	}
 	else

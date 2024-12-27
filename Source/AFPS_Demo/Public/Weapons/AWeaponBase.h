@@ -90,9 +90,6 @@ public:
 	int GetMaxAmmo() const;
 
 	UFUNCTION()
-	int GetAmmoIncrement() const;
-
-	UFUNCTION()
 	void AddAmmo(const int InAmount);
 
 	UFUNCTION()
@@ -135,9 +132,6 @@ protected:
 
 	UPROPERTY(ReplicatedUsing="OnRep_Ammo")
 	int Ammo = 0;
-
-	UPROPERTY(EditDefaultsOnly, Category="Ammo")
-	int AmmoIncrement = 1;
 
 	UFUNCTION()
 	void OnRep_Ammo(int OldAmmo);

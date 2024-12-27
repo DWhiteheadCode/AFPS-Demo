@@ -24,7 +24,11 @@ protected:
 
 	void Pickup(AActor* OtherActor) override;
 
-	// WEAPON IDENTIFIER
+	// WEAPON IDENTIFIER --------------------------------------------------
 	UPROPERTY(EditDefaultsOnly, Category="Weapon")
 	FGameplayTag WeaponIdentifier;
+
+	// AMMO INCREMENT -----------------------------------------------------
+	UPROPERTY(EditDefaultsOnly, Category = "Ammo")
+	int AmmoIncrement = 1;
 };

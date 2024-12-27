@@ -378,11 +378,6 @@ int AAWeaponBase::GetMaxAmmo() const
 	return MaxAmmo;
 }
 
-int AAWeaponBase::GetAmmoIncrement() const
-{
-	return AmmoIncrement;
-}
-
 void AAWeaponBase::AddAmmo(const int InAmount)
 {
 	if (!HasAuthority())
