@@ -93,7 +93,7 @@ void AAWeaponBase::EquipWeapon()
 	}
 
 	bIsEquipped = true;
-	OnRep_IsEquippedChanged();
+	OnRep_IsEquipped();
 }
 
 void AAWeaponBase::UnequipWeapon()
@@ -111,7 +111,7 @@ void AAWeaponBase::UnequipWeapon()
 	}
 
 	bIsEquipped = false;
-	OnRep_IsEquippedChanged();
+	OnRep_IsEquipped();
 }
 
 bool AAWeaponBase::IsEquippable() const
@@ -122,12 +122,18 @@ bool AAWeaponBase::IsEquippable() const
 void AAWeaponBase::SetIsEquippable(bool bInEquippable)
 {
 	bIsEquippable = bInEquippable;
+	OnRep_IsEquippable();
 }
 
-void AAWeaponBase::OnRep_IsEquippedChanged()
+void AAWeaponBase::OnRep_IsEquippable()
+{
+	OnIsEquippableChanged.Broadcast(this, bIsEquippable);
+}
+
+void AAWeaponBase::OnRep_IsEquipped()
 {
 	MeshComp->SetVisibility(bIsEquipped, true);
-	OnEquipStateChanged.Broadcast(this, bIsEquipped);
+	OnIsEquippedChanged.Broadcast(this, bIsEquipped);
 
 	if (AmbientAudioComp && AmbientAudioComp->Sound)
 	{

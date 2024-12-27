@@ -12,7 +12,9 @@ class USoundCue;
 
 class AAPlayerCharacter;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnEquipStateChanged, AAWeaponBase*, Weapon, bool, bIsEquipped);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnIsEquippedChanged, AAWeaponBase*, Weapon, bool, bIsEquipped);
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnIsEquippableChanged, AAWeaponBase*, Weapon, bool, bIsEquippable);
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnAmmoChanged, AAWeaponBase*, Weapon, int, NewAmmo, int, OldAmmo);
 
@@ -42,7 +44,7 @@ public:
 	UFUNCTION()
 	void UnequipWeapon();
 
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable)
 	bool IsEquippable() const;
 
 	UFUNCTION()
@@ -52,7 +54,10 @@ public:
 	bool IsEquipped() const;
 
 	UPROPERTY(BlueprintAssignable)
-	FOnEquipStateChanged OnEquipStateChanged;
+	FOnIsEquippedChanged OnIsEquippedChanged;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnIsEquippableChanged OnIsEquippableChanged;
 
 	// FIRING ------------------------------------------------------------------
 	UFUNCTION()
@@ -144,14 +149,17 @@ protected:
 	void OnFireDelayEnd();
 
 	// EQUIPPED -------------------------------------------------------------------
-	UPROPERTY(Replicated)
+	UPROPERTY(ReplicatedUsing="OnRep_IsEquippable")
 	bool bIsEquippable = false;
 	
-	UPROPERTY(ReplicatedUsing="OnRep_IsEquippedChanged")
+	UFUNCTION()
+	void OnRep_IsEquippable();
+
+	UPROPERTY(ReplicatedUsing="OnRep_IsEquipped")
 	bool bIsEquipped = false;
 
 	UFUNCTION()
-	void OnRep_IsEquippedChanged();
+	void OnRep_IsEquipped();
 
 	// AUDIO -----------------------------------------------------------------------
 	UFUNCTION()
