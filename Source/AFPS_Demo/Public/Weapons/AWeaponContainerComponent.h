@@ -52,14 +52,14 @@ public:
 
 	void EquipDefaultWeapon();
 
-	//UPROPERTY(BlueprintAssignable)
-	//FOnWeaponAdded OnWeaponAdded;
-
 	UPROPERTY(BlueprintAssignable)
 	FOnWeaponsReplicated OnWeaponsReplicated;
 
-	//UFUNCTION(Client, Unreliable)
-	//void ClientOnWeaponAdded(AAWeaponBase* NewWeapon);
+	UFUNCTION()
+	bool HasWeapon(FGameplayTag WeaponIdentifier) const;
+
+	UFUNCTION()
+	AAWeaponBase* GetWeapon(const FGameplayTag WeaponIdentifier) const;
 
 protected:
 	virtual void BeginPlay() override;
@@ -83,9 +83,6 @@ protected:
 
 	UFUNCTION()
 	bool InstantiateWeapon(TSubclassOf<AAWeaponBase> WeaponClass);
-
-	UFUNCTION()
-	AAWeaponBase* GetWeapon(const FGameplayTag WeaponIdentifier) const;
 
 	// WEAPON SWAPPING -------------------------------------------------------
 	UPROPERTY(EditAnywhere, Category = "Weapon Swapping")

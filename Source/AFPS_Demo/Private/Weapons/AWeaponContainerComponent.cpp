@@ -203,16 +203,21 @@ void UAWeaponContainerComponent::ProcessSwapInput(FGameplayTag WeaponIdentifier)
 		return;
 	}
 
-	if (!GetOwner()->HasAuthority()) // Let client visually start swapping weapon, but tell server to start swap as well
-	{
-		ServerProcessSwapInput(WeaponIdentifier);
-	}
-
 	AAWeaponBase* Weapon = GetWeapon(WeaponIdentifier);
 	if (!Weapon)
 	{
 		UE_LOG(LogTemp, Error, TEXT("Receivied input to swap to [%s], but found no weapon matching that tag"), *(WeaponIdentifier.GetTagName().ToString()));
 		return;
+	}
+
+	if (!Weapon->IsEquippable()) 
+	{
+		return;
+	}
+
+	if (!GetOwner()->HasAuthority()) // Let client visually start swapping weapon, but tell server to start swap as well
+	{
+		ServerProcessSwapInput(WeaponIdentifier);
 	}
  
 	RepData_WeaponSwap.WeaponToSwapTo = Weapon;
@@ -349,10 +354,10 @@ void UAWeaponContainerComponent::EquipDefaultWeapon()
 	}
 
 	AAWeaponBase* DefaultWeapon = Weapons[0];
-	if (DefaultWeapon)
-	{
-		ProcessSwapInput(DefaultWeapon->GetIdentifier());		
-	}	
+	DefaultWeapon->SetIsEquippable(true);
+	ProcessSwapInput(DefaultWeapon->GetIdentifier());
+
+	UE_LOG(LogTemp, Log, TEXT("Making DefaultWeapon [%s] equippable."), *GetNameSafe(DefaultWeapon));
 }
 
 void UAWeaponContainerComponent::OnEquipRocketInput()
@@ -386,6 +391,19 @@ AAWeaponBase* UAWeaponContainerComponent::GetWeapon(const FGameplayTag WeaponIde
 	}
 
 	return nullptr;
+}
+
+bool UAWeaponContainerComponent::HasWeapon(FGameplayTag WeaponIdentifier) const
+{
+	for (AAWeaponBase* Weapon : Weapons)
+	{
+		if (Weapon && Weapon->GetIdentifier() == WeaponIdentifier)
+		{
+			return true;
+		}
+	}
+
+	return false;
 }
 
 /*

@@ -12,7 +12,9 @@ class USoundCue;
 
 class AAPlayerCharacter;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnEquipStateChanged, AAWeaponBase*, Weapon, bool, bIsEquipped);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnIsEquippedChanged, AAWeaponBase*, Weapon, bool, bIsEquipped);
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnIsEquippableChanged, AAWeaponBase*, Weapon, bool, bIsEquippable);
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnAmmoChanged, AAWeaponBase*, Weapon, int, NewAmmo, int, OldAmmo);
 
@@ -35,7 +37,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	FGameplayTag GetIdentifier() const;
 
-	// EQUIP / UNEQUIP --------------------------------------------------------
+	// EQUIP / UNEQUIP --------------------------------------------------------	
 	UFUNCTION()
 	void EquipWeapon();	
 
@@ -43,10 +45,19 @@ public:
 	void UnequipWeapon();
 
 	UFUNCTION(BlueprintCallable)
+	bool IsEquippable() const;
+
+	UFUNCTION()
+	void SetIsEquippable(bool bInEquippable);
+
+	UFUNCTION(BlueprintCallable)
 	bool IsEquipped() const;
 
 	UPROPERTY(BlueprintAssignable)
-	FOnEquipStateChanged OnEquipStateChanged;
+	FOnIsEquippedChanged OnIsEquippedChanged;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnIsEquippableChanged OnIsEquippableChanged;
 
 	// FIRING ------------------------------------------------------------------
 	UFUNCTION()
@@ -72,8 +83,17 @@ public:
 	UFUNCTION(BlueprintCallable)
 	int GetAmmo() const;
 
+	UFUNCTION()
+	int GetStartingAmmo() const;
+
 	UFUNCTION(BlueprintCallable)
 	int GetMaxAmmo() const;
+
+	UFUNCTION()
+	void AddAmmo(const int InAmount);
+
+	UFUNCTION()
+	void SetAmmo(const int InAmount);
 
 	UPROPERTY(BlueprintAssignable)
 	FOnAmmoChanged OnAmmoChanged;
@@ -138,11 +158,17 @@ protected:
 	void OnFireDelayEnd();
 
 	// EQUIPPED -------------------------------------------------------------------
-	UPROPERTY(ReplicatedUsing="OnRep_IsEquippedChanged")
+	UPROPERTY(ReplicatedUsing="OnRep_IsEquippable")
+	bool bIsEquippable = false;
+	
+	UFUNCTION()
+	void OnRep_IsEquippable();
+
+	UPROPERTY(ReplicatedUsing="OnRep_IsEquipped")
 	bool bIsEquipped = false;
 
 	UFUNCTION()
-	void OnRep_IsEquippedChanged();
+	void OnRep_IsEquipped();
 
 	// AUDIO -----------------------------------------------------------------------
 	UFUNCTION()

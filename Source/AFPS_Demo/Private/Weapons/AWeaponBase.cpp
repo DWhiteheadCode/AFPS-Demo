@@ -80,6 +80,12 @@ bool AAWeaponBase::SetOwningPlayer(AAPlayerCharacter* InOwner)
 
 void AAWeaponBase::EquipWeapon()
 {
+	if (!bIsEquippable)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Attempted to equip [%s], but bIsEquippable was false"), *GetNameSafe(this));
+		return;
+	}
+
 	if (bIsEquipped)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Weapon [%s] tried to equip while already equipped"), *GetNameSafe(this));
@@ -87,7 +93,7 @@ void AAWeaponBase::EquipWeapon()
 	}
 
 	bIsEquipped = true;
-	OnRep_IsEquippedChanged();
+	OnRep_IsEquipped();
 }
 
 void AAWeaponBase::UnequipWeapon()
@@ -105,13 +111,29 @@ void AAWeaponBase::UnequipWeapon()
 	}
 
 	bIsEquipped = false;
-	OnRep_IsEquippedChanged();
+	OnRep_IsEquipped();
 }
 
-void AAWeaponBase::OnRep_IsEquippedChanged()
+bool AAWeaponBase::IsEquippable() const
+{
+	return bIsEquippable;
+}
+
+void AAWeaponBase::SetIsEquippable(bool bInEquippable)
+{
+	bIsEquippable = bInEquippable;
+	OnRep_IsEquippable();
+}
+
+void AAWeaponBase::OnRep_IsEquippable()
+{
+	OnIsEquippableChanged.Broadcast(this, bIsEquippable);
+}
+
+void AAWeaponBase::OnRep_IsEquipped()
 {
 	MeshComp->SetVisibility(bIsEquipped, true);
-	OnEquipStateChanged.Broadcast(this, bIsEquipped);
+	OnIsEquippedChanged.Broadcast(this, bIsEquipped);
 
 	if (AmbientAudioComp && AmbientAudioComp->Sound)
 	{
@@ -346,9 +368,60 @@ int AAWeaponBase::GetAmmo() const
 	return Ammo;
 }
 
+int AAWeaponBase::GetStartingAmmo() const
+{
+	return StartingAmmo;
+}
+
 int AAWeaponBase::GetMaxAmmo() const
 {
 	return MaxAmmo;
+}
+
+void AAWeaponBase::AddAmmo(const int InAmount)
+{
+	if (!HasAuthority())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Client tried to add ammo to weapon [%s]"), *GetNameSafe(this));
+		return;
+	}
+
+	if (InAmount < 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Tried to add negative [%d] ammo to weapon [%s]"), InAmount, *GetNameSafe(this));
+		return;
+	}	
+
+	const int OldAmmo = Ammo;
+	Ammo = FMath::Min(MaxAmmo, Ammo + InAmount);
+
+	OnRep_Ammo(OldAmmo);
+}
+
+void AAWeaponBase::SetAmmo(const int InAmount)
+{
+	if (!HasAuthority())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Client attempted to set ammo for [%s]"), *GetNameSafe(this));
+		return;
+	}
+
+	if (Ammo < 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Attempted to set ammo for [%s] to a negative value [%d]."), *GetNameSafe(this), InAmount);
+		return;
+	}
+
+	if (InAmount > MaxAmmo)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Attempted to set ammo for [%s] to [%d], which is greater than MaxAmmo [%d]."), *GetNameSafe(this), InAmount, MaxAmmo);
+		return;
+	}
+
+	const int OldAmmo = Ammo;
+	Ammo = InAmount;
+
+	OnRep_Ammo(OldAmmo);
 }
 
 void AAWeaponBase::OnRep_OwningPlayer()
@@ -382,6 +455,7 @@ void AAWeaponBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLife
 	DOREPLIFETIME(AAWeaponBase, Ammo);
 	DOREPLIFETIME(AAWeaponBase, LastFireTime);
 	DOREPLIFETIME(AAWeaponBase, bIsFiring);
+	DOREPLIFETIME(AAWeaponBase, bIsEquippable);
 	DOREPLIFETIME(AAWeaponBase, bIsEquipped);
 	DOREPLIFETIME(AAWeaponBase, OwningPlayer);
 }
