@@ -16,7 +16,7 @@ bool AAPickup_Weapon::CanPickup(AActor* OtherActor)
 		return false;
 	}
 
-	if (!OtherActor)
+	if (!OtherActor) // Redundant check due to Super::CanPickup(), but leaving here as sanity check.
 	{
 		UE_LOG(LogTemp, Warning, TEXT("CanPickup() called on [%s] with null OtherActor"), *GetNameSafe(this));
 		return false;

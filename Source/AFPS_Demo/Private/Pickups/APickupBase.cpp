@@ -36,6 +36,7 @@ void AAPickupBase::OnBeginOverlap_Implementation(UPrimitiveComponent* Overlapped
 	}	
 }
 
+// Derived classes should override this and call Super.
 void AAPickupBase::Pickup(AActor* OtherActor)
 {
 	bIsActive = false;
@@ -51,7 +52,7 @@ void AAPickupBase::Pickup(AActor* OtherActor)
 	}
 }
 
-// Derived classes should typically override this.
+// Derived classes should typically override this and call Super
 bool AAPickupBase::CanPickup(AActor* OtherActor)
 {
 	return OtherActor && HasAuthority();

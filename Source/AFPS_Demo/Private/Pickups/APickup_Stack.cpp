@@ -4,8 +4,14 @@
 
 bool AAPickup_Stack::CanPickup(AActor* OtherActor)
 {
-	if (!HasAuthority())
+	if (!Super::CanPickup(OtherActor))
 	{
+		return false;
+	}
+
+	if (!OtherActor) // Redundant check due to Super::CanPickup(), but leaving here as sanity check.
+	{
+		UE_LOG(LogTemp, Warning, TEXT("CanPickup() called on [%s] with null OtherActor"), *GetNameSafe(this));
 		return false;
 	}
 
