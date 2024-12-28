@@ -154,6 +154,9 @@ Combination of:
 ### Weapons
 - https://freesound.org/people/magnuswaker/sounds/697827/
 
+### Ammo
+- https://freesound.org/people/BBBBilly/sounds/653032/
+
 ## Damage Feedback
 ### Incoming Damage
 - https://freesound.org/people/ImmergoMedia/sounds/689666/
