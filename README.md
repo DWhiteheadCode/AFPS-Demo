@@ -133,22 +133,26 @@ Combination of:
 - https://freesound.org/people/walllable/sounds/653454/
 
 ## Pickups
-### Armour Shard
+### Stack
+#### Armour Shard
 - https://freesound.org/people/The-Sacha-Rush/sounds/400113/
 
-### Heavy Armour
+#### Heavy Armour
 - https://freesound.org/people/CogFireStudios/sounds/420996/
 
-### Health Bubble
+#### Health Bubble
 - https://freesound.org/people/el_boss/sounds/665182/
 
-### Light Armour
+#### Light Armour
 - https://freesound.org/people/magnuswaker/sounds/540092/
 	- Pitch shifted by -25%
 
-### Mega Health
+#### Mega Health
 - https://freesound.org/people/xkeril/sounds/736851/
 
+
+### Weapons
+- https://freesound.org/people/magnuswaker/sounds/697827/
 
 ## Damage Feedback
 ### Incoming Damage
