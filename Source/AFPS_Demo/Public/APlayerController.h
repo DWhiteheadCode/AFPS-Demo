@@ -5,6 +5,8 @@
 #include "APlayerController.generated.h"
 
 class USoundCue;
+class UInputMappingContext;
+class UInputAction;
 
 class UAStackComponent;
 
@@ -52,6 +54,25 @@ public:
 	FOnDamageDealt OnDamageDealt;
 
 protected:
+	void SetupInputComponent() override;
+
+	// PAUSE MENU -----------------------------------------------------------------------------
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UUserWidget> PauseMenuClass;
+
+	UPROPERTY() 
+	UUserWidget* PauseMenuInstance;
+
+	UFUNCTION(BlueprintCallable)
+	void TogglePauseMenu();
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	UInputMappingContext* MenusMappingContext;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	UInputAction* PauseMenuAction;
+
+	// INCOMING DAMAGE ------------------------------------------------------------------------
 	UFUNCTION()
 	void PlayIncomingDamageSound(AAPlayerController* OwningPlayer, UAStackComponent* StackComp, AActor* InstigatorActor, int DamageAmount);
 

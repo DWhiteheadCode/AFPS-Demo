@@ -2,12 +2,30 @@
 
 #include "Kismet/GameplayStatics.h"
 #include "Sound/SoundCue.h"
+#include "Blueprint/UserWidget.h"
+#include "EnhancedInputComponent.h"
+#include "EnhancedInputSubsystems.h"
 
 #include "AStackComponent.h"
+
+void AAPlayerController::SetupInputComponent()
+{
+	Super::SetupInputComponent();
+
+	if (UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(InputComponent))
+	{
+		EnhancedInputComponent->BindAction(PauseMenuAction, ETriggerEvent::Started, this, &AAPlayerController::TogglePauseMenu);
+	}
+}
 
 void AAPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
+	{
+		Subsystem->AddMappingContext(MenusMappingContext, 100);
+	}
 
 	if (IsLocalController())
 	{
@@ -83,4 +101,36 @@ void AAPlayerController::PlayIncomingDamageSound(AAPlayerController* OwningPlaye
 void AAPlayerController::ClientOnDamageDealt_Implementation(UAStackComponent* TargetStackComp, const int DamageAmount)
 {
 	OnDamageDealt.Broadcast(this, TargetStackComp, DamageAmount);
+}
+
+void AAPlayerController::TogglePauseMenu()
+{
+	if (!PauseMenuClass)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Pause Menu Class not specified in PlayerController blueprint."));
+		return;
+	}
+
+	// Close Menu
+	if (PauseMenuInstance && PauseMenuInstance->IsInViewport())
+	{
+		PauseMenuInstance->RemoveFromParent();
+		PauseMenuInstance = nullptr;
+
+		bShowMouseCursor = false;
+		SetInputMode(FInputModeGameOnly());
+	}
+	else // Open Menu
+	{
+		PauseMenuInstance = CreateWidget<UUserWidget>(this, PauseMenuClass);
+
+		if (ensure(PauseMenuInstance))
+		{
+			PauseMenuInstance->AddToViewport(100); // High priority to overlap other UI
+
+			bShowMouseCursor = true;
+			SetInputMode(FInputModeUIOnly());
+		}
+
+	}
 }
