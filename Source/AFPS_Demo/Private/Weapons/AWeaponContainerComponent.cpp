@@ -4,8 +4,9 @@
 #include "EnhancedInputComponent.h"
 #include "Net/UnrealNetwork.h"
 
+#include "GameFramework/Character.h"
+
 #include "Weapons/AWeaponBase.h"
-#include "APlayerCharacter.h"
 
 #include "../AFPS_Demo.h"
 
@@ -18,7 +19,7 @@ void UAWeaponContainerComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	OwningCharacter = Cast<AAPlayerCharacter>(GetOwner());
+	OwningCharacter = Cast<ACharacter>(GetOwner());
 
 	if (!OwningCharacter)
 	{
@@ -113,7 +114,7 @@ bool UAWeaponContainerComponent::InstantiateWeapon(TSubclassOf<AAWeaponBase> Wea
 		return false;
 	}
 
-	NewWeapon->SetOwningPlayer(OwningCharacter);
+	NewWeapon->SetOwningCharacter(OwningCharacter);
 	Weapons.Add(NewWeapon);
 
 	OnRep_Weapons(); // Server should notify its delegate too

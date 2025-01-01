@@ -11,7 +11,6 @@
 class UInputMappingContext;
 
 class AAWeaponBase;
-class AAPlayerCharacter;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponsReplicated, UAWeaponContainerComponent*, OwningComp); 
 //DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnWeaponAdded, UAWeaponContainerComponent*, OwningComp, AAWeaponBase*, Weapon);
@@ -49,24 +48,33 @@ class AFPS_DEMO_API UAWeaponContainerComponent : public UActorComponent
 
 public:	
 	UAWeaponContainerComponent();
-
-	void EquipDefaultWeapon();
-
+	
 	UPROPERTY(BlueprintAssignable)
 	FOnWeaponsReplicated OnWeaponsReplicated;
 
+	// WEAPON SWAPPING ------------------------------
+	void EquipDefaultWeapon();
+
+	// ACCESSORS ------------------------------------
 	UFUNCTION()
 	bool HasWeapon(FGameplayTag WeaponIdentifier) const;
 
 	UFUNCTION()
 	AAWeaponBase* GetWeapon(const FGameplayTag WeaponIdentifier) const;
 
+	// FIRING INPUTS ---------------------------------
+	UFUNCTION(BlueprintCallable)
+	void OnTriggerHeldInput();
+
+	UFUNCTION(BlueprintCallable)
+	void OnTriggerReleasedInput();
+
 protected:
 	virtual void BeginPlay() override;
 
 	// OWNER -----------------------------------------------------------------
 	UPROPERTY()
-	TObjectPtr<AAPlayerCharacter> OwningCharacter;
+	TObjectPtr<ACharacter> OwningCharacter;
 
 	// WEAPONS ---------------------------------------------------------------
 	UPROPERTY(EditDefaultsOnly, Category = "Weapons")
@@ -117,14 +125,8 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	TObjectPtr<UInputAction> FireAction;
 
-	UFUNCTION(BlueprintCallable)
-	void OnTriggerHeldInput();
-
 	UFUNCTION(Server, Reliable)
 	void ServerOnTriggerHeldInput();
-
-	UFUNCTION(BlueprintCallable)
-	void OnTriggerReleasedInput();
 
 	UFUNCTION(Server, Reliable)
 	void ServerOnTriggerReleasedInput();
