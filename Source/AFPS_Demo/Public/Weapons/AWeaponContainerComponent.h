@@ -48,17 +48,26 @@ class AFPS_DEMO_API UAWeaponContainerComponent : public UActorComponent
 
 public:	
 	UAWeaponContainerComponent();
-
-	void EquipDefaultWeapon();
-
+	
 	UPROPERTY(BlueprintAssignable)
 	FOnWeaponsReplicated OnWeaponsReplicated;
 
+	// WEAPON SWAPPING ------------------------------
+	void EquipDefaultWeapon();
+
+	// ACCESSORS ------------------------------------
 	UFUNCTION()
 	bool HasWeapon(FGameplayTag WeaponIdentifier) const;
 
 	UFUNCTION()
 	AAWeaponBase* GetWeapon(const FGameplayTag WeaponIdentifier) const;
+
+	// FIRING INPUTS ---------------------------------
+	UFUNCTION(BlueprintCallable)
+	void OnTriggerHeldInput();
+
+	UFUNCTION(BlueprintCallable)
+	void OnTriggerReleasedInput();
 
 protected:
 	virtual void BeginPlay() override;
@@ -116,14 +125,8 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	TObjectPtr<UInputAction> FireAction;
 
-	UFUNCTION(BlueprintCallable)
-	void OnTriggerHeldInput();
-
 	UFUNCTION(Server, Reliable)
 	void ServerOnTriggerHeldInput();
-
-	UFUNCTION(BlueprintCallable)
-	void OnTriggerReleasedInput();
 
 	UFUNCTION(Server, Reliable)
 	void ServerOnTriggerReleasedInput();
