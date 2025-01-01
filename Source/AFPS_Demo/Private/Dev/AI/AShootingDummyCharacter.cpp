@@ -2,5 +2,5 @@
 
 AAShootingDummyCharacter::AAShootingDummyCharacter()
 {
-	
+	WeaponComp = CreateDefaultSubobject<UAWeaponContainerComponent>("WeaponComp");
 }
