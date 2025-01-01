@@ -6,8 +6,6 @@
 
 EBTNodeResult::Type UABTTask_StopFire::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
-	UE_LOG(LogTemp, Log, TEXT("BT Start fire"));
-
 	AAIController* MyController = OwnerComp.GetAIOwner();
 	if (MyController)
 	{
