@@ -135,6 +135,12 @@ protected:
 	void OnRep_Ammo(int OldAmmo);
 
 	// FIRING ---------------------------------------------------------------------
+	UFUNCTION(NetMulticast, Unreliable)
+	void MulticastPlayNonLoopFireSound();
+	
+	UFUNCTION()
+	void StartInitialFireDelay();
+
 	UPROPERTY(EditAnywhere, Category = "Weapon")
 	float FireDelay = 1.f;
 
@@ -143,17 +149,17 @@ protected:
 	UPROPERTY(Replicated)
 	float LastFireTime = -1.f;
 
-	UPROPERTY(Replicated)
+	UPROPERTY(ReplicatedUsing="OnRep_IsFiring")
 	bool bIsFiring = false;
+
+	UFUNCTION()
+	void OnRep_IsFiring();
 
 	UPROPERTY(Replicated)
 	bool bIsTriggerHeld = false;
 
 	UFUNCTION()
 	void OnInitialFireDelayEnd();
-
-	UFUNCTION()
-	void OnFireDelayEnd();
 
 	// EQUIPPED -------------------------------------------------------------------
 	UPROPERTY(ReplicatedUsing="OnRep_IsEquippable")
@@ -170,7 +176,7 @@ protected:
 
 	// AUDIO -----------------------------------------------------------------------
 	UFUNCTION()
-	void PlayFiringAudioLoop();
+	void StartFiringAudioLoop();
 
 	UFUNCTION()
 	void StopFiringAudioLoop();

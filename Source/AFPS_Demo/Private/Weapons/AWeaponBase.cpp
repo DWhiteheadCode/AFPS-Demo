@@ -148,24 +148,30 @@ void AAWeaponBase::OnRep_IsEquipped()
 }
 
 // Note: It is the responsibility of the WeaponContainerComponent to call this from both the
-// client and the server
+// owning-client and the server
 void AAWeaponBase::SetIsTriggerHeld(const bool bInTriggerHeld)
 {
 	bIsTriggerHeld = bInTriggerHeld;
 
+	// Stop firing
 	if (!bIsTriggerHeld)
 	{
 		bIsFiring = false;
-		GetWorldTimerManager().ClearTimer(TimerHandle_FireDelay);
-
-		if (FiringAudioIsLoop())
-		{
-			StopFiringAudioLoop();
-		}
+		OnRep_IsFiring();
 
 		return;
 	}
 
+	if (!CanFire())
+	{
+		return;
+	}
+
+	StartInitialFireDelay();
+}
+
+void AAWeaponBase::StartInitialFireDelay()
+{
 	// Get the InitialDelay before the first shot can be fired
 	float InitialDelay = 0.f;
 	if (LastFireTime >= 0) // Weapon has been fired before
@@ -199,38 +205,37 @@ void AAWeaponBase::SetIsTriggerHeld(const bool bInTriggerHeld)
 
 void AAWeaponBase::OnInitialFireDelayEnd()
 {
-	bIsFiring = true;
-
-	FTimerDelegate Delegate;
-	Delegate.BindUFunction(this, "OnFireDelayEnd");
-	GetWorldTimerManager().SetTimer(TimerHandle_FireDelay, Delegate, FireDelay, true, 0.f);
-
-	// Start firing sound if it is a looping fire sound
-	if (FiringAudioIsLoop() && CanFire()) // Ensure there's actually ammo to start firing
+	if (!CanFire())
 	{
-		PlayFiringAudioLoop();
-	}	
+		UE_LOG(LogTemp, Warning, TEXT("OnInitialFireDelayEnd() called, but CanFire() was false"));
+		return;
+	}
+	
+	bIsFiring = true;
+	OnRep_IsFiring();
+	
+	FTimerDelegate Delegate;
+	Delegate.BindUFunction(this, "Fire");
+	GetWorldTimerManager().SetTimer(TimerHandle_FireDelay, Delegate, FireDelay, true, 0.f);
 }
 
-void AAWeaponBase::OnFireDelayEnd()
+void AAWeaponBase::OnRep_IsFiring()
 {
-	if (HasAuthority())
+	if (!bIsFiring)
 	{
-		AGameStateBase* GameState = GetWorld()->GetGameState<AGameStateBase>();
-
-		if (!GameState)
-		{
-			UE_LOG(LogTemp, Error, TEXT("Server failed to retrieve GameState in [%s]::OnFireDelayEnd(). Weapon won't fire."), *GetNameSafe(this));
-			return;
-		}
-
-		// Setting this (even if the weapon can't fire) means it can't attempt to fire again too soon
-		LastFireTime = GameState->GetServerWorldTimeSeconds();
+		GetWorldTimerManager().ClearTimer(TimerHandle_FireDelay);
 	}
 
-	if (CanFire())
+	if (FiringAudioIsLoop())
 	{
-		Fire();
+		if (bIsFiring)
+		{
+			StartFiringAudioLoop();
+		}
+		else
+		{
+			StopFiringAudioLoop();
+		}
 	}
 }
 
@@ -259,30 +264,50 @@ void AAWeaponBase::Fire()
 			Ammo--;
 			OnRep_Ammo(Ammo + 1);
 		}		
-	}
 
-	// Play firing sound if it is a per-shot sound
-	if (!FiringAudioIsLoop())
-	{
-		if (FiringAudioComp && FiringAudioComp->Sound)
+		if (Ammo == 0)
 		{
-			FiringAudioComp->Play();
+			bIsFiring = false;
+			OnRep_IsFiring();
 		}
-	}
 
-	// End the firing audio loop if weapon has run out of ammo
-	if (Ammo == 0 && FiringAudioIsLoop())
-	{
-		StopFiringAudioLoop();
+		// Play the firing sound if firing audio is not a loop
+		if (!FiringAudioIsLoop())
+		{
+			MulticastPlayNonLoopFireSound();
+		}
 	}
 }
 
 void AAWeaponBase::OnRep_Ammo(int OldAmmo)
-{
+{ 
+	// Trigger was held while no ammo, but ammo was picked up so start firing.
+	if (OldAmmo <= 0 && Ammo > 0 && bIsTriggerHeld)
+	{
+		if (CanFire())
+		{
+			StartInitialFireDelay();
+		}		
+	}
+
 	OnAmmoChanged.Broadcast(this, Ammo, OldAmmo);
 }
 
-void AAWeaponBase::PlayFiringAudioLoop()
+void AAWeaponBase::MulticastPlayNonLoopFireSound_Implementation()
+{
+	if (FiringAudioIsLoop())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("MulticastPlayNonLoopFireSound() called, but firing audio is a loop"));
+		return;
+	}
+
+	if (FiringAudioComp && FiringAudioComp->Sound)
+	{
+		FiringAudioComp->Play();
+	}
+}
+
+void AAWeaponBase::StartFiringAudioLoop()
 {
 	if (FiringAudioIsLoop())
 	{
@@ -293,7 +318,7 @@ void AAWeaponBase::PlayFiringAudioLoop()
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("PlayFiringAudioLoop() called on [%s], but FiringAudioIsLoop() returned false."), *GetNameSafe(this));
+		UE_LOG(LogTemp, Warning, TEXT("StartFiringAudioLoop() called on [%s], but FiringAudioIsLoop() returned false."), *GetNameSafe(this));
 	}
 }
 
