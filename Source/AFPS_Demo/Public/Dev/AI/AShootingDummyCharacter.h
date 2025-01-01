@@ -14,6 +14,8 @@ class AFPS_DEMO_API AAShootingDummyCharacter : public ACharacter
 public:
 	AAShootingDummyCharacter();
 
+	virtual FVector GetPawnViewLocation() const override;
+
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<UAWeaponContainerComponent> WeaponComp;
