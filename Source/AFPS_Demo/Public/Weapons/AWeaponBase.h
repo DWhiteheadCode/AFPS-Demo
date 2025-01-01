@@ -10,8 +10,6 @@
 class UStaticMeshComponent;
 class USoundCue;
 
-class AAPlayerCharacter;
-
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnIsEquippedChanged, AAWeaponBase*, Weapon, bool, bIsEquipped);
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnIsEquippableChanged, AAWeaponBase*, Weapon, bool, bIsEquippable);
@@ -29,7 +27,7 @@ public:
 	void BeginPlay() override;
 
 	UFUNCTION()
-	bool SetOwningPlayer(AAPlayerCharacter* InOwner);
+	bool SetOwningCharacter(ACharacter* InOwner);
 
 	UFUNCTION()
 	bool IsLocallyOwned() const;
@@ -115,7 +113,7 @@ protected:
 
 	// OWNER ----------------------------------------------------------------------
 	UPROPERTY(ReplicatedUsing="OnRep_OwningPlayer")
-	TObjectPtr<AAPlayerCharacter> OwningPlayer;
+	TObjectPtr<ACharacter> OwningPlayer;
 
 	UFUNCTION()
 	void OnRep_OwningPlayer();

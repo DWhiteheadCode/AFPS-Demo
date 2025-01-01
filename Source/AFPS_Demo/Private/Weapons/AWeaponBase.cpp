@@ -6,8 +6,7 @@
 #include "Sound/SoundCue.h"
 #include "Components/AudioComponent.h"
 #include "Components/SkeletalMeshComponent.h"
-
-#include "APlayerCharacter.h"
+#include "GameFramework/Character.h"
 
 #include "../AFPS_Demo.h"
 
@@ -45,7 +44,7 @@ void AAWeaponBase::BeginPlay()
 	}	
 }
 
-bool AAWeaponBase::SetOwningPlayer(AAPlayerCharacter* InOwner)
+bool AAWeaponBase::SetOwningCharacter(ACharacter* InOwner)
 {
 	if (!InOwner)
 	{

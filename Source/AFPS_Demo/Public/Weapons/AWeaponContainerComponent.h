@@ -11,7 +11,6 @@
 class UInputMappingContext;
 
 class AAWeaponBase;
-class AAPlayerCharacter;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponsReplicated, UAWeaponContainerComponent*, OwningComp); 
 //DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnWeaponAdded, UAWeaponContainerComponent*, OwningComp, AAWeaponBase*, Weapon);
@@ -66,7 +65,7 @@ protected:
 
 	// OWNER -----------------------------------------------------------------
 	UPROPERTY()
-	TObjectPtr<AAPlayerCharacter> OwningCharacter;
+	TObjectPtr<ACharacter> OwningCharacter;
 
 	// WEAPONS ---------------------------------------------------------------
 	UPROPERTY(EditDefaultsOnly, Category = "Weapons")
