@@ -9,5 +9,5 @@ AAShootingDummyCharacter::AAShootingDummyCharacter()
 
 FVector AAShootingDummyCharacter::GetPawnViewLocation() const
 {
-	return GetActorLocation() + FVector(0, 0, 90);
+	return GetActorLocation() + ViewpointOffset;
 }
