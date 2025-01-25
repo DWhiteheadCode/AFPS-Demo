@@ -8,11 +8,6 @@
 void AAPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
-
-	if (IsLocalController())
-	{
-		OnDamageTaken.AddDynamic(this, &AAPlayerController::PlayIncomingDamageSound);
-	}
 }
 
 void AAPlayerController::SetPawn(APawn* NewPawn)
@@ -40,10 +35,15 @@ void AAPlayerController::OnPawnStackChanged(UAStackComponent* OwningComp, AActor
 	if (TotalDelta < 0.f)
 	{
 		OnDamageTaken.Broadcast(this, OwningComp, InstigatorActor, -TotalDelta);
+
+		if (IsLocalController())
+		{
+			PlayIncomingDamageSound(InstigatorActor);
+		}
 	}
 }
 
-void AAPlayerController::PlayIncomingDamageSound(AAPlayerController* OwningPlayer, UAStackComponent* StackComp, AActor* InstigatorActor, int DamageAmount)
+void AAPlayerController::PlayIncomingDamageSound(AActor* InstigatorActor)
 {
 	if (!InstigatorActor)
 	{
@@ -60,7 +60,7 @@ void AAPlayerController::PlayIncomingDamageSound(AAPlayerController* OwningPlaye
 
 	if (!IncomingDamageSound)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Tried to play incoming damage sound, but IncomingDamageSound wasn't set in blueprints"));
+		UE_LOG(LogTemp, Warning, TEXT("Tried to play incoming damage sound, but IncomingDamageSound wasn't set in PlayerController [%s] blueprint"), *GetNameSafe(this));
 		return;
 	}
 
@@ -72,7 +72,6 @@ void AAPlayerController::PlayIncomingDamageSound(AAPlayerController* OwningPlaye
 	// Set the damage sound in the direction of the instigator, but at a fixed distance
 	FVector DamageSoundDirection =  DamageSoundLocation - ViewLocation;
 	DamageSoundDirection.Normalize();
-
 	DamageSoundLocation = ViewLocation + (IncomingDamageSoundDistance * DamageSoundDirection);
 
 	//DrawDebugSphere(GetWorld(), DamageSoundLocation, 5.f, 16, FColor::White, false, 2.f, 0, 1.f);

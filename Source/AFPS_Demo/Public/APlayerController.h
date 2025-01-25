@@ -53,7 +53,7 @@ public:
 
 protected:
 	UFUNCTION()
-	void PlayIncomingDamageSound(AAPlayerController* OwningPlayer, UAStackComponent* StackComp, AActor* InstigatorActor, int DamageAmount);
+	void PlayIncomingDamageSound(AActor* InstigatorActor);
 
 	UPROPERTY(EditDefaultsOnly, Category="Sound")
 	TObjectPtr<USoundCue> IncomingDamageSound;
