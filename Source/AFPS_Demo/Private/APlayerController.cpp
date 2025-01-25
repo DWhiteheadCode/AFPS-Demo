@@ -25,7 +25,7 @@ void AAPlayerController::SetPawn(APawn* NewPawn)
 
 		if (StackComp)
 		{
-			StackComp->OnStackChanged.AddDynamic(this, &AAPlayerController::OnPawnStackChanged);
+			StackComp->OnStackChanged.AddUniqueDynamic(this, &AAPlayerController::OnPawnStackChanged);
 		}
 	}
 }
