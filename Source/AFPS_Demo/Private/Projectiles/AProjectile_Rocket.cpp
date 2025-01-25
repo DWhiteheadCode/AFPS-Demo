@@ -61,6 +61,10 @@ void AAProjectile_Rocket::Detonate()
 	AudioComp->Stop();
 	UGameplayStatics::PlaySoundAtLocation(this, DetonationSound, GetActorLocation());
 
+	// Locally appear to destroy self, and prevent further detonations
+	SetActorEnableCollision(false);
+	MeshComp->SetVisibility(false);
+
 	if (HasAuthority())
 	{
 		const TArray<AActor*> NearbyActors = GetActorsInExplosionRadius();
@@ -85,9 +89,6 @@ void AAProjectile_Rocket::Detonate()
 			}
 		}
 
-		// Destroy self
-		SetActorEnableCollision(false);
-		MeshComp->SetVisibility(false);
 		SetLifeSpan(2.f);
 	}
 }
